@@ -1,8 +1,9 @@
-# Include the .bin image
-export GEN_BIN_IMAGE = 1
-
 # Define target output
 target: bit
+
+# Include the .bin/.bit image
+export GEN_BIN_IMAGE = 1
+export GEN_BIT_IMAGE = 1
 
 # Define target part
 export PRJ_PART = XCZU48DR-FSVG1517-2-E
