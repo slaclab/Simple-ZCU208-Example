@@ -19,7 +19,8 @@ import pyrogue.protocols
 import pyrogue.utilities.fileio
 import pyrogue.utilities.prbs
 
-import simple_zcu208_example as rfsoc
+import simple_zcu208_example                 as rfsoc
+import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 
 rogue.Version.minVersion('5.10.0')
 
@@ -62,8 +63,8 @@ class Root(pr.Root):
         self.ringBufferDac = [stream.TcpClient(ip,10000+2*(i+16)) for i in range(8)]
         self.adcRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
         self.dacRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.adcProcessor  = [rfsoc.RingBufferProcessor(name=f'AdcProcessor[{i}]') for i in range(8)]
-        self.dacProcessor  = [rfsoc.RingBufferProcessor(name=f'DacProcessor[{i}]') for i in range(8)]
+        self.adcProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]') for i in range(8)]
+        self.dacProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]') for i in range(8)]
 
         # Connect the rogue stream arrays
         for i in range(8):

@@ -10,9 +10,10 @@
 
 import pyrogue as pr
 
-import axi_soc_ultra_plus_core as socCore
-import surf.xilinx             as xil
-import simple_zcu208_example   as rfsoc
+import axi_soc_ultra_plus_core                       as socCore
+import axi_soc_ultra_plus_core.hardware.XilinxZcu208 as xilinxZcu208
+import surf.xilinx                                   as xil
+import simple_zcu208_example                         as rfsoc
 
 class XilinxZcu208(pr.Device):
     def __init__(self,**kwargs):
@@ -21,15 +22,19 @@ class XilinxZcu208(pr.Device):
         self.add(socCore.AxiSocCore(
             offset       = 0x0000_0000,
             numDmaLanes  = 2,
-            expand       = False,
+            # expand       = True,
+        ))
+
+        self.add(xilinxZcu208.Hardware(
+            offset       = 0x8000_0000,
+            expand       = True,
         ))
 
         self.add(xil.RfDataConverter(
             offset       = 0x9000_0000,
-            expand       = False,
+            # expand       = True,
         ))
 
         self.add(rfsoc.Application(
             offset       = 0xA000_0000,
-            expand       = False,
         ))

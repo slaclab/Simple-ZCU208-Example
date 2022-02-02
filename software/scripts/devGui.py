@@ -69,7 +69,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     top_level = os.path.realpath(__file__).split('software')[0]
-    ui = top_level+'firmware/python/simple_zcu208_example/gui/GuiTop.py'
+    ui = top_level+'firmware/submodules/axi-soc-ultra-plus-core/python/axi_soc_ultra_plus_core/rfsoc_utility/gui/GuiTop.py'
 
     #################################################################
 
