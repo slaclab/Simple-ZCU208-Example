@@ -1,9 +1,5 @@
 Root:
-  SpaceRfSocGen2:
-    Hardware:
-      Lmk:
-        enable: True
-        RESET: 0x0
+  XilinxZcu208:
     Application:
       DacSigGen:
         enable: True

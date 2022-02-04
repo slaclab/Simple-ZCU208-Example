@@ -81,30 +81,43 @@ class Root(pr.Root):
 
     ##################################################################################
 
-    # def start(self,**kwargs):
-        # super(Root, self).start(**kwargs)
+    def start(self,**kwargs):
+        super(Root, self).start(**kwargs)
 
-        # # Check for default file path
-        # if (self.defaultFile is not None) :
+        # Useful pointers
+        lmk      = self.XilinxZcu208.Hardware.Lmk
+        i2cToSpi = self.XilinxZcu208.Hardware.I2cToSpi
 
-            # # Load the Default YAML file
-            # print(f'Loading path={self.defaultFile} Default Configuration File...')
-            # self.LoadConfig(self.defaultFile)
+        # Set the SPI clock rate
+        i2cToSpi.SpiClockRate.setDisp('115kHz')
 
-            # # Load the LMK configuration from the TICS Pro software HEX export
-            # for i in range(2): # Seems like 1st time after power up that need to load twice
-                # self.SpaceRfSocGen2.Hardware.Lmk.PwrDwnLmkChip()
-                # self.SpaceRfSocGen2.Hardware.Lmk.PwrUpLmkChip()
-                # self.SpaceRfSocGen2.Hardware.Lmk.LoadCodeLoaderHexFile('config/lmk/HexRegisterValues.txt')
-                # self.SpaceRfSocGen2.Hardware.Lmk.Init()
+        # Configure the LMK for 4-wire SPI
+        lmk.LmkReg_0x0000.set(value=0x10) # 4-wire SPI
+        lmk.LmkReg_0x015F.set(value=0x3B) # STATUS_LD1 = SPI readback
 
-            # # Reset the RF Data Converter
-            # self.SpaceRfSocGen2.RfDataConverter.Reset.set(0x1)
+        # Check for default file path
+        if (self.defaultFile is not None) :
 
-            # # Load the waveform data into DacSigGen
-            # self.SpaceRfSocGen2.Application.DacSigGen.LoadCsvFile()
+            # Load the Default YAML file
+            print(f'Loading path={self.defaultFile} Default Configuration File...')
+            self.LoadConfig(self.defaultFile)
 
-            # # Update all SW remote registers
-            # self.ReadAll()
+            # Load the LMK configuration from the TICS Pro software HEX export
+            for i in range(2): # Seems like 1st time after power up that need to load twice
+                lmk.enable.set(True)
+                lmk.PwrDwnLmkChip()
+                lmk.PwrUpLmkChip()
+                lmk.LoadCodeLoaderHexFile('config/lmk/HexRegisterValues.txt')
+                lmk.Init()
+                lmk.enable.set(False)
+
+            # Reset the RF Data Converter
+            self.XilinxZcu208.RfDataConverter.Reset.set(0x1)
+
+            # Load the waveform data into DacSigGen
+            self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
+
+            # Update all SW remote registers
+            self.ReadAll()
 
     ##################################################################################
