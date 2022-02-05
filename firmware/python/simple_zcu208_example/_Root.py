@@ -63,8 +63,8 @@ class Root(pr.Root):
         self.ringBufferDac = [stream.TcpClient(ip,10000+2*(i+16)) for i in range(8)]
         self.adcRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
         self.dacRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.adcProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]') for i in range(8)]
-        self.dacProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]') for i in range(8)]
+        self.adcProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
+        self.dacProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
 
         # Connect the rogue stream arrays
         for i in range(8):

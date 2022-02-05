@@ -1,6 +1,15 @@
 Root:
   XilinxZcu208:
     Application:
+      AppRingBuffer:
+        Adc:
+          Ch[:]:
+            TrigBurst: 0x0
+            ContinuousMode: 0x1
+        Dac:
+          Ch[:]:
+            TrigBurst: 0x0
+            ContinuousMode: 0x1
       DacSigGen:
         enable: True
         Enabled: 0x1
