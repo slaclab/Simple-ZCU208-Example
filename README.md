@@ -139,7 +139,7 @@ sudo dd if=/u1/ruckman/build/petalinux/SimpleZcu208Example/images/linux/rootfs.e
 
 
 ```bash
-scp Simple-ZCU208-Example/firmware/targets/SimpleZcu208Example/images/SimpleZcu208Example-0x01000000-20220204204648-ruckman-90df89c.bit root@10.0.0.200:/media/sd-mmcblk0p1/system.bit
+scp SimpleZcu208Example-0x01000000-20220204204648-ruckman-90df89c.bit root@10.0.0.200:/media/sd-mmcblk0p1/system.bit
 ```
 
 2) Send a "sync" and "reboot" command to the RFSoC to load new firmware:  Here's an example:
