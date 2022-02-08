@@ -104,7 +104,7 @@ $ source CreatePetalinuxProject.sh images/SimpleZcu208Example-0x01000000-2022020
 https://xilinx-wiki.atlassian.net/wiki/x/EYMfAQ
 
 2) Copy For the boot images, simply copy the files to the FAT partition.
-This typically will include system.bit, BOOT.BIN, image.ub, and boot.scr
+This typically will include system.bit, BOOT.BIN, image.ub, and boot.scr.  Here's an example:
 
 ```bash
 sudo mount /dev/sde1 /u1/boot
@@ -140,13 +140,13 @@ sudo dd if=/u1/ruckman/build/petalinux/SimpleZcu208Example/images/linux/rootfs.e
 
 ```bash
 scp Simple-ZCU208-Example/firmware/targets/SimpleZcu208Example/images/SimpleZcu208Example-0x01000000-20220204204648-ruckman-90df89c.bit root@10.0.0.200:/media/sd-mmcblk0p1/system.bit
-``
+```
 
 2) Send a "sync" and "reboot" command to the RFSoC to load new firmware:  Here's an example:
 
 ```bash
 ssh root@10.0.0.200 '/bin/sync; /sbin/reboot'
-``
+```
 
 <!--- ######################################################## -->
 
