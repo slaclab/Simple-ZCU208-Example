@@ -1,0 +1,252 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<style type="text/css">
+body {margin-top:6.35em; 
+      margin-left:6.35em; 
+      width:62.5em;
+      text-align:justify;
+      font-size:1em; 
+      font-family:"Arial", Serif;
+      color:#000000;}
+
+h1 {font-size:1.125em;
+    font-family:"Arial", Sans-serif;
+    color:#943634;}
+
+p {font-size:inherit;
+   width:62.5em;
+   font-family:inherit;
+   color:inherit;}
+
+ul {font-size:inherit;
+    width:62.5em;
+    font-family:inherit;
+    color:inherit;}
+
+li {width:46.15em;}
+
+.image {position: relative;
+        width: 100%;}
+
+table {border-collapse:collapse;
+       border-spacing:0;
+       caption-side:bottom;
+       border-style:solid;
+       border-width:thin;
+       font-size:1em;
+       width:62.5em;
+       font-family:inherit;
+       color:inherit;}
+
+.title_table {border-collapse:collapse;
+       border-spacing:0;
+       caption-side:bottom;
+       font-size:1em;
+       width:62.5em;
+       border-style:none;}
+
+.title_table_image_cell {border-bottom:thin solid #000000;}
+
+.title_table_design_cell {vertical-align:bottom;
+        font-size:1.875em;
+        text-align:right;
+        border-bottom:thin solid #000000;}
+
+.title_table_date_cell{font-size:1.25em;
+        vertical-align:bottom;
+        text-align:left;
+        border-bottom:thick solid #943634}
+
+.sg_row {font-size:inherit;
+         font-family:inherit;
+         color:inherit;
+         border-style:solid;
+         border-width:thin;}
+
+.sg_cell {margin:0;
+          padding:1em;
+          border-width:inherit;
+          border-style:inherit;
+          font-size:inherit;
+          font-family:inherit;
+          color:inherit;}
+
+.sg_cell_first_row {margin:0;
+          padding:1em;
+          border-width:inherit;
+          border-style:inherit;
+          border-bottom:thick solid #943634;
+          font-size:inherit;
+          font-family:inherit;
+          color:inherit;}
+
+.sg_caption {text-align:left;
+             caption-side:bottom;
+             font-family:inherit;
+             font-size:inherit;}
+</style>
+</head>
+<body>
+<table class="title_table">
+<tr>
+<td class="title_table_image_cell"></td>
+<td class="title_table_design_cell">analysis</td>
+</tr>
+<tr>
+<td colspan=2 class="title_table_date_cell"><b></b></td>
+</tr>
+</table>
+<h1>int analysis_Initialize(analysis* InstancePtr, u16 DeviceId)</h1>
+<p>
+Initialize analysis pointer with a specifc instance of the device based device id.
+<br/>
+  @param InstancePtr to be initialized
+<br/>
+  @param DeviceId device id assigned to the device in xparameters.h
+<br/>
+<br/>
+  @return int XST_SUCCESS if initialization is successful
+<br/>
+</p>
+<h1>void analysis_baseiqsel_write(analysis *InstancePtr, u32 Data);</h1>
+<p>
+ Write to baseiqsel gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the baseiqsel instance to operate on.<br/>
+ @param	Data is value to be written to gateway baseiqsel.<br/>
+<br/>
+ @return	None.<br/>
+<br/>
+ @note    .<br/>
+<br/>
+</p>
+<h1>u32 analysis_baseiqsel_read(analysis *InstancePtr);</h1>
+<p>
+ Read from baseiqsel gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the baseiqsel instance to operate on.<br/>
+<br/>
+ @return	u32<br/>
+
+ @note    .<br/>
+<br/>
+</p>
+<h1>void analysis_valid_in_write(analysis *InstancePtr, u32 Data);</h1>
+<p>
+ Write to valid_in gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the valid_in instance to operate on.<br/>
+ @param	Data is value to be written to gateway valid_in.<br/>
+<br/>
+ @return	None.<br/>
+<br/>
+ @note    .<br/>
+<br/>
+</p>
+<h1>u32 analysis_valid_in_read(analysis *InstancePtr);</h1>
+<p>
+ Read from valid_in gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the valid_in instance to operate on.<br/>
+<br/>
+ @return	u32<br/>
+
+ @note    .<br/>
+<br/>
+</p>
+<h1>void analysis_swap_iq_write(analysis *InstancePtr, u32 Data);</h1>
+<p>
+ Write to swap_iq gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the swap_iq instance to operate on.<br/>
+ @param	Data is value to be written to gateway swap_iq.<br/>
+<br/>
+ @return	None.<br/>
+<br/>
+ @note    .<br/>
+<br/>
+</p>
+<h1>u32 analysis_swap_iq_read(analysis *InstancePtr);</h1>
+<p>
+ Read from swap_iq gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the swap_iq instance to operate on.<br/>
+<br/>
+ @return	u32<br/>
+
+ @note    .<br/>
+<br/>
+</p>
+<h1>void analysis_receivep0_scale_write(analysis *InstancePtr, u8 Data);</h1>
+<p>
+ Write to receivep0_scale gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the receivep0_scale instance to operate on.<br/>
+ @param	Data is value to be written to gateway receivep0_scale.<br/>
+<br/>
+ @return	None.<br/>
+<br/>
+ @note    .<br/>
+<br/>
+</p>
+<h1>u8 analysis_receivep0_scale_read(analysis *InstancePtr);</h1>
+<p>
+ Read from receivep0_scale gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the receivep0_scale instance to operate on.<br/>
+<br/>
+ @return	u8<br/>
+
+ @note    .<br/>
+<br/>
+</p>
+<h1>void analysis_transmit_scale_write(analysis *InstancePtr, u8 Data);</h1>
+<p>
+ Write to transmit_scale gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the transmit_scale instance to operate on.<br/>
+ @param	Data is value to be written to gateway transmit_scale.<br/>
+<br/>
+ @return	None.<br/>
+<br/>
+ @note    .<br/>
+<br/>
+</p>
+<h1>u8 analysis_transmit_scale_read(analysis *InstancePtr);</h1>
+<p>
+ Read from transmit_scale gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the transmit_scale instance to operate on.<br/>
+<br/>
+ @return	u8<br/>
+
+ @note    .<br/>
+<br/>
+</p>
+<h1>void analysis_transmitp0_sel_write(analysis *InstancePtr, u8 Data);</h1>
+<p>
+ Write to transmitp0_sel gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the transmitp0_sel instance to operate on.<br/>
+ @param	Data is value to be written to gateway transmitp0_sel.<br/>
+<br/>
+ @return	None.<br/>
+<br/>
+ @note    .<br/>
+<br/>
+</p>
+<h1>u8 analysis_transmitp0_sel_read(analysis *InstancePtr);</h1>
+<p>
+ Read from transmitp0_sel gateway of analysis. Assignments are LSB-justified.<br/>
+<br/>
+ @param	InstancePtr is the transmitp0_sel instance to operate on.<br/>
+<br/>
+ @return	u8<br/>
+
+ @note    .<br/>
+<br/>
+</p>
+</body>
+</html>

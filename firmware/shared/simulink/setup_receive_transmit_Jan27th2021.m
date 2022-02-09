@@ -1,4 +1,4 @@
-addpath('../../common')
+%addpath('../../common')
 
 %Fadc = 614e6;  % MHz
 Fadc=312.5e6;
@@ -41,7 +41,9 @@ samples_per_channel = 256;
 t0=(0:samples_per_channel*number_channels-1)/(samples_per_channel*number_channels);
 phi = cumsum(t0)/32;
 chirp = exp(-j*2*pi*phi);
-sine1=exp(1j*2*pi*Fadc/64/16.*(0:1:length(t0)-1)/(Fadc*16));
+sine1=exp(1j*2*pi*Fadc/64/16*2.*(0:1:length(t0)-1)/(Fadc*16));
+sine2=exp(1j*2*pi*Fadc/64/16*8.*(0:1:length(t0)-1)/(Fadc*16));
+sine1=sine1+sine2;
 %sine1=zeros(1,length(t0));
 num_sample=size(t0,2);
 num_lane=16;
