@@ -27,7 +27,7 @@ class XilinxZcu208(pr.Device):
 
         self.add(xilinxZcu208.Hardware(
             offset       = 0x8000_0000,
-            expand       = True,
+            # expand       = True,
         ))
 
         self.add(xil.RfDataConverter(
@@ -37,4 +37,5 @@ class XilinxZcu208(pr.Device):
 
         self.add(rfsoc.Application(
             offset       = 0xA000_0000,
+            expand       = True,
         ))
