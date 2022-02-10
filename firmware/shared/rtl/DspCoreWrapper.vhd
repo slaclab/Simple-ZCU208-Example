@@ -58,16 +58,16 @@ architecture mapping of DspCoreWrapper is
          adc_imag               : in  std_logic_vector(255 downto 0);
          adc_real               : in  std_logic_vector(255 downto 0);
          reset                  : in  std_logic_vector(0 downto 0);
-         valid1_dealy           : in  std_logic_vector(9 downto 0);
+         valid_in               : in  std_logic_vector(0 downto 0);
          clk                    : in  std_logic;
          analysis_aresetn       : in  std_logic;
-         analysis_s_axi_awaddr  : in  std_logic_vector(4 downto 0);
+         analysis_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
          analysis_s_axi_awvalid : in  std_logic;
          analysis_s_axi_wdata   : in  std_logic_vector(31 downto 0);
          analysis_s_axi_wstrb   : in  std_logic_vector(3 downto 0);
          analysis_s_axi_wvalid  : in  std_logic;
          analysis_s_axi_bready  : in  std_logic;
-         analysis_s_axi_araddr  : in  std_logic_vector(4 downto 0);
+         analysis_s_axi_araddr  : in  std_logic_vector(11 downto 0);
          analysis_s_axi_arvalid : in  std_logic;
          analysis_s_axi_rready  : in  std_logic;
          receive_vo1            : out std_logic_vector(0 downto 0);
@@ -157,14 +157,10 @@ begin
 
    U_analysis : analysis_0
       port map (
-         -- Unused Ports
-         valid1_dealy           => (others => '0'),
-         receive_vo1            => open,
-         receive_vo2            => open,
-         ifft_opvalid           => open,
          -- Clock and Reset
          clk                    => dspClk,
          reset(0)               => dspRst,
+         valid_in(0)            => '1',
          -- ADC Interface
          adc_real               => dspAdc(0),
          adc_imag               => dspAdc(1),
@@ -178,7 +174,7 @@ begin
          oddimag                => dspDebug(3),
          -- AXI-Lite interface
          analysis_aresetn       => dspRstL,
-         analysis_s_axi_awaddr  => axilWriteMasters(ANALYSIS_INDEX_C).awaddr(4 downto 0),
+         analysis_s_axi_awaddr  => axilWriteMasters(ANALYSIS_INDEX_C).awaddr(11 downto 0),
          analysis_s_axi_awvalid => axilWriteMasters(ANALYSIS_INDEX_C).awvalid,
          analysis_s_axi_awready => axilWriteSlaves(ANALYSIS_INDEX_C).awready,
          analysis_s_axi_wdata   => axilWriteMasters(ANALYSIS_INDEX_C).wdata,
@@ -188,7 +184,7 @@ begin
          analysis_s_axi_bresp   => axilWriteSlaves(ANALYSIS_INDEX_C).bresp,
          analysis_s_axi_bvalid  => axilWriteSlaves(ANALYSIS_INDEX_C).bvalid,
          analysis_s_axi_bready  => axilWriteMasters(ANALYSIS_INDEX_C).bready,
-         analysis_s_axi_araddr  => axilReadMasters(ANALYSIS_INDEX_C).araddr(4 downto 0),
+         analysis_s_axi_araddr  => axilReadMasters(ANALYSIS_INDEX_C).araddr(11 downto 0),
          analysis_s_axi_arvalid => axilReadMasters(ANALYSIS_INDEX_C).arvalid,
          analysis_s_axi_arready => axilReadSlaves(ANALYSIS_INDEX_C).arready,
          analysis_s_axi_rdata   => axilReadSlaves(ANALYSIS_INDEX_C).rdata,
