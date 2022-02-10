@@ -35,8 +35,8 @@ entity Application is
       -- DMA Interface (dmaClk domain)
       dmaClk          : in  sl;
       dmaRst          : in  sl;
-      dmaIbMaster     : out AxiStreamMasterType;
-      dmaIbSlave      : in  AxiStreamSlaveType;
+      dmaIbMasters    : out AxiStreamMasterArray(1 downto 0);
+      dmaIbSlaves     : in  AxiStreamSlaveArray(1 downto 0);
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
@@ -59,7 +59,8 @@ architecture mapping of Application is
 
    constant RING_INDEX_C       : natural := 0;
    constant DAC_SIG_INDEX_C    : natural := 1;
-   constant NUM_AXIL_MASTERS_C : natural := 2;
+   constant DSP_CORE_INDEX_C   : natural := 2;
+   constant NUM_AXIL_MASTERS_C : natural := 3;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 28, 24);
 
@@ -68,9 +69,9 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc      : Slv256Array(7 downto 0) := (others => (others => '0'));
-   signal dac      : Slv256Array(7 downto 0) := (others => (others => '0'));
-   signal loopback : Slv256Array(7 downto 0) := (others => (others => '0'));
+   signal adc    : Slv256Array(7 downto 0) := (others => (others => '0'));
+   signal dac    : Slv256Array(7 downto 0) := (others => (others => '0'));
+   signal dspOut : Slv256Array(7 downto 0) := (others => (others => '0'));
 
 begin
 
@@ -82,9 +83,6 @@ begin
          dspDac <= dac    after TPD_G;
       end if;
    end process;
-
-   -- Loopback
-   loopback <= adc;
 
    U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
@@ -104,6 +102,29 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
+   U_DspCoreWrapper : entity work.DspCoreWrapper
+      generic map (
+         TPD_G            => TPD_G,
+         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(DSP_CORE_INDEX_C).baseAddr)
+      port map (
+         -- DMA Interface (dmaClk domain)
+         dmaClk          => dmaClk,
+         dmaRst          => dmaRst,
+         dmaIbMaster     => dmaIbMasters(1),
+         dmaIbSlave      => dmaIbSlaves(1),
+         -- ADC/DAC Interface (dspClk domain)
+         dspClk          => dspClk,
+         dspRst          => dspRst,
+         dspAdc          => adc,
+         dspDac          => dspOut,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         axilReadMaster  => axilReadMasters(DSP_CORE_INDEX_C),
+         axilReadSlave   => axilReadSlaves(DSP_CORE_INDEX_C),
+         axilWriteMaster => axilWriteMasters(DSP_CORE_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(DSP_CORE_INDEX_C));
+
    U_AppRingBuffer : entity axi_soc_ultra_plus_core.AppRingBuffer
       generic map (
          TPD_G            => TPD_G,
@@ -117,8 +138,8 @@ begin
          -- DMA Interface (dmaClk domain)
          dmaClk          => dmaClk,
          dmaRst          => dmaRst,
-         dmaIbMaster     => dmaIbMaster,
-         dmaIbSlave      => dmaIbSlave,
+         dmaIbMaster     => dmaIbMasters(0),
+         dmaIbSlave      => dmaIbSlaves(0),
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
@@ -143,7 +164,7 @@ begin
          -- DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspDacIn        => loopback,
+         dspDacIn        => dspOut,
          dspDacOut       => dac,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,

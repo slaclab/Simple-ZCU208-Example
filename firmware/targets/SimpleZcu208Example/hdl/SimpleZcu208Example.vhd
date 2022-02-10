@@ -118,10 +118,10 @@ begin
    -----------------------
    U_Core : entity axi_soc_ultra_plus_core.AxiSocUltraPlusCore
       generic map (
-         TPD_G             => TPD_G,
-         BUILD_INFO_G      => BUILD_INFO_G,
-         EXT_AXIL_MASTER_G => false,
-         DMA_SIZE_G        => DMA_SIZE_C)
+         TPD_G              => TPD_G,
+         BUILD_INFO_G       => BUILD_INFO_G,
+         EXT_AXIL_MASTER_G  => false,
+         DMA_SIZE_G         => DMA_SIZE_C)
       port map (
          ------------------------
          --  Top Level Interfaces
@@ -236,8 +236,8 @@ begin
          -- DMA Interface (dmaClk domain)
          dmaClk          => dmaClk,
          dmaRst          => dmaRst,
-         dmaIbMaster     => dmaIbMasters(0),
-         dmaIbSlave      => dmaIbSlaves(0),
+         dmaIbMasters    => dmaIbMasters,
+         dmaIbSlaves     => dmaIbSlaves,
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
@@ -250,11 +250,5 @@ begin
          axilWriteSlave  => axilWriteSlaves(APP_INDEX_C),
          axilReadMaster  => axilReadMasters(APP_INDEX_C),
          axilReadSlave   => axilReadSlaves(APP_INDEX_C));
-
-   ----------------------
-   --- Loopback Debugging
-   ----------------------
-   dmaIbMasters(1) <= dmaObMasters(1);
-   dmaObSlaves(1)  <= dmaIbSlaves(1);
 
 end top_level;
