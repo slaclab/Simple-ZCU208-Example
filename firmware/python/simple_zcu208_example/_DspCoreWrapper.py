@@ -23,8 +23,9 @@ class DspCoreWrapper(pr.Device):
         ))
 
         self.add(rfsoc_utility.AppRingBuffer(
+            name     = 'DebugRingBuffer',
             offset   = 0x001_00000,
             numAdcCh = 4, # Must match NUM_ADC_CH_G config
             numDacCh = 0, # Must match NUM_DAC_CH_G config
-            expand   = True,
+            # expand   = True,
         ))

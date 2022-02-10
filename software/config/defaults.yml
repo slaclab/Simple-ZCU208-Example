@@ -12,8 +12,8 @@ Root:
             ContinuousMode: 0x1
       DacSigGen:
         enable: True
-        Enabled: 0x1
-        Continuous: 0x1
+        Enabled: 0x0
+        Continuous: 0x0
         # CsvFilePath: 'config/DacSigGen/1tone_19_531250MHz_all_channels.csv'
         # CsvFilePath: 'config/DacSigGen/1tone_21MHz.csv'
         # CsvFilePath: 'config/DacSigGen/1tone_1GHz.csv'
