@@ -13,26 +13,19 @@ import pyrogue as pr
 import simple_zcu208_example                 as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 
-class Application(pr.Device):
+class DspCoreWrapper(pr.Device):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
 
+        self.add(rfsoc.Analysis(
+            offset   = 0x000_00000,
+            expand   = True,
+        ))
+
         self.add(rfsoc_utility.AppRingBuffer(
-            offset   = 0x00_000000,
-            numAdcCh = 8, # Must match NUM_ADC_CH_G config
-            numDacCh = 8, # Must match NUM_DAC_CH_G config
+            name     = 'DebugRingBuffer',
+            offset   = 0x001_00000,
+            numAdcCh = 4, # Must match NUM_ADC_CH_G config
+            numDacCh = 0, # Must match NUM_DAC_CH_G config
             # expand   = True,
-        ))
-
-        self.add(rfsoc_utility.DacSigGen(
-            offset       = 0x01_000000,
-            numCh        = 8,  # Must match NUM_CH_G config
-            ramWidth     = 10, # Must match RAM_ADDR_WIDTH_G config
-            smplPerCycle = 16, # Must match SAMPLE_PER_CYCLE_G config
-            # expand       = True,
-        ))
-
-        self.add(rfsoc.DspCoreWrapper(
-            offset       = 0x02_000000,
-            expand       = True,
         ))

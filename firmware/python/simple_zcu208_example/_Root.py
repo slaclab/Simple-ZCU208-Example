@@ -19,7 +19,8 @@ import pyrogue.protocols
 import pyrogue.utilities.fileio
 import pyrogue.utilities.prbs
 
-import simple_zcu208_example as rfsoc
+import simple_zcu208_example                 as rfsoc
+import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 
 rogue.Version.minVersion('5.10.0')
 
@@ -62,8 +63,8 @@ class Root(pr.Root):
         self.ringBufferDac = [stream.TcpClient(ip,10000+2*(i+16)) for i in range(8)]
         self.adcRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
         self.dacRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.adcProcessor  = [rfsoc.RingBufferProcessor(name=f'AdcProcessor[{i}]') for i in range(8)]
-        self.dacProcessor  = [rfsoc.RingBufferProcessor(name=f'DacProcessor[{i}]') for i in range(8)]
+        self.adcProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
+        self.dacProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
 
         # Connect the rogue stream arrays
         for i in range(8):
@@ -80,30 +81,43 @@ class Root(pr.Root):
 
     ##################################################################################
 
-    # def start(self,**kwargs):
-        # super(Root, self).start(**kwargs)
+    def start(self,**kwargs):
+        super(Root, self).start(**kwargs)
 
-        # # Check for default file path
-        # if (self.defaultFile is not None) :
+        # Useful pointers
+        lmk      = self.XilinxZcu208.Hardware.Lmk
+        i2cToSpi = self.XilinxZcu208.Hardware.I2cToSpi
 
-            # # Load the Default YAML file
-            # print(f'Loading path={self.defaultFile} Default Configuration File...')
-            # self.LoadConfig(self.defaultFile)
+        # Set the SPI clock rate
+        i2cToSpi.SpiClockRate.setDisp('115kHz')
 
-            # # Load the LMK configuration from the TICS Pro software HEX export
-            # for i in range(2): # Seems like 1st time after power up that need to load twice
-                # self.SpaceRfSocGen2.Hardware.Lmk.PwrDwnLmkChip()
-                # self.SpaceRfSocGen2.Hardware.Lmk.PwrUpLmkChip()
-                # self.SpaceRfSocGen2.Hardware.Lmk.LoadCodeLoaderHexFile('config/lmk/HexRegisterValues.txt')
-                # self.SpaceRfSocGen2.Hardware.Lmk.Init()
+        # Configure the LMK for 4-wire SPI
+        lmk.LmkReg_0x0000.set(value=0x10) # 4-wire SPI
+        lmk.LmkReg_0x015F.set(value=0x3B) # STATUS_LD1 = SPI readback
 
-            # # Reset the RF Data Converter
-            # self.SpaceRfSocGen2.RfDataConverter.Reset.set(0x1)
+        # Check for default file path
+        if (self.defaultFile is not None) :
 
-            # # Load the waveform data into DacSigGen
-            # self.SpaceRfSocGen2.Application.DacSigGen.LoadCsvFile()
+            # Load the Default YAML file
+            print(f'Loading path={self.defaultFile} Default Configuration File...')
+            self.LoadConfig(self.defaultFile)
 
-            # # Update all SW remote registers
-            # self.ReadAll()
+            # Load the LMK configuration from the TICS Pro software HEX export
+            for i in range(2): # Seems like 1st time after power up that need to load twice
+                lmk.enable.set(True)
+                lmk.PwrDwnLmkChip()
+                lmk.PwrUpLmkChip()
+                lmk.LoadCodeLoaderHexFile('config/lmk/HexRegisterValues.txt')
+                lmk.Init()
+                lmk.enable.set(False)
+
+            # Reset the RF Data Converter
+            self.XilinxZcu208.RfDataConverter.Reset.set(0x1)
+
+            # Load the waveform data into DacSigGen
+            self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
+
+            # Update all SW remote registers
+            self.ReadAll()
 
     ##################################################################################
