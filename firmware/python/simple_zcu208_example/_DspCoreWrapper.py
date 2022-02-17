@@ -28,4 +28,10 @@ class DspCoreWrapper(pr.Device):
             numAdcCh = 4, # Must match NUM_ADC_CH_G config
             numDacCh = 0, # Must match NUM_DAC_CH_G config
             # expand   = True,
+            hidden   = True,
+        ))
+
+        self.add(rfsoc.DspDebug(
+            offset   = 0x002_00000,
+            expand   = True,
         ))

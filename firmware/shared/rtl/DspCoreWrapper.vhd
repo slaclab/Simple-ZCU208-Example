@@ -53,6 +53,8 @@ end DspCoreWrapper;
 
 architecture mapping of DspCoreWrapper is
 
+   constant NUM_DBG_C : positive := 4;
+
    component analysis_0
       port (
          adc_imag               : in  std_logic_vector(255 downto 0);
@@ -91,8 +93,9 @@ architecture mapping of DspCoreWrapper is
    end component;
 
    constant ANALYSIS_INDEX_C   : natural := 0;
-   constant DEBUG_INDEX_C      : natural := 1;
-   constant NUM_AXIL_MASTERS_C : natural := 2;
+   constant RING_BUFF_INDEX_C  : natural := 1;
+   constant DEBUG_INDEX_C      : natural := 2;
+   constant NUM_AXIL_MASTERS_C : natural := 3;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 24, 20);
 
@@ -106,8 +109,9 @@ architecture mapping of DspCoreWrapper is
    signal dspWriteMaster : AxiLiteWriteMasterType;
    signal dspWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal dspDebug : Slv256Array(3 downto 0) := (others => (others => '0'));
-   signal dspRstL  : sl;
+   signal dspDebug   : Slv256Array(NUM_DBG_C-1 downto 0) := (others => (others => '0'));
+   signal dspRstL    : sl;
+   signal rstDspCore : sl;
 
 begin
 
@@ -159,7 +163,7 @@ begin
       port map (
          -- Clock and Reset
          clk                    => dspClk,
-         reset(0)               => dspRst,
+         reset(0)               => rstDspCore,
          valid_in(0)            => '1',
          -- ADC Interface
          adc_real               => dspAdc(0),
@@ -195,12 +199,12 @@ begin
    U_DebugRingBuffer : entity axi_soc_ultra_plus_core.AppRingBuffer
       generic map (
          TPD_G            => TPD_G,
-         EN_ADC_BUFF_G    => true,      -- Debug path
-         EN_DAC_BUFF_G    => false,     -- DAC not used
-         NUM_ADC_CH_G     => 4,         -- Mapping debug to ADC ports
-         NUM_DAC_CH_G     => 1,         -- Unused
+         EN_ADC_BUFF_G    => true,       -- Debug path
+         EN_DAC_BUFF_G    => false,      -- DAC not used
+         NUM_ADC_CH_G     => NUM_DBG_C,  -- Mapping debug to ADC ports
+         NUM_DAC_CH_G     => 1,          -- Unused
          RAM_ADDR_WIDTH_G => 10,
-         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(DEBUG_INDEX_C).baseAddr)
+         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RING_BUFF_INDEX_C).baseAddr)
       port map (
          -- DMA Interface (dmaClk domain)
          dmaClk          => dmaClk,
@@ -213,8 +217,25 @@ begin
          dspAdc          => dspDebug,
          dspDac          => (others => (others => '0')),
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axilClk,
-         axilRst         => axilRst,
+         axilClk         => dspClk,
+         axilRst         => dspRst,
+         axilReadMaster  => axilReadMasters(RING_BUFF_INDEX_C),
+         axilReadSlave   => axilReadSlaves(RING_BUFF_INDEX_C),
+         axilWriteMaster => axilWriteMasters(RING_BUFF_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(RING_BUFF_INDEX_C));
+
+   U_DebugReg : entity work.DspCoreDebugReg
+      generic map (
+         TPD_G     => TPD_G,
+         NUM_DBG_G => NUM_DBG_C)
+      port map (
+         -- Clock and Reset
+         dspClk          => dspClk,
+         dspRst          => dspRst,
+         -- Debugging Interface
+         dspDebug        => dspDebug,
+         rstDspCore      => rstDspCore,
+         -- AXI-Lite Interface
          axilReadMaster  => axilReadMasters(DEBUG_INDEX_C),
          axilReadSlave   => axilReadSlaves(DEBUG_INDEX_C),
          axilWriteMaster => axilWriteMasters(DEBUG_INDEX_C),

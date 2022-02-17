@@ -20,3 +20,11 @@ Root:
         #CsvFilePath: 'config/DacSigGen/2tone_1GHz_1MHzspacing.csv'
         CsvFilePath: 'config/DacSigGen/Ntone_2GHz_blanksection.csv'
         # CsvFilePath: 'config/DacSigGen/zero_all_ch.csv'
+      DspCoreWrapper:
+        enable: False
+        Analysis:
+          Config[1]: 0
+          Config[2]: 4
+          Config[3]: 84
+          Config[4]: 0
+

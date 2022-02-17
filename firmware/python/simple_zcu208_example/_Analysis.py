@@ -29,6 +29,7 @@ class Analysis(pr.Device):
                 offset       = (i*0x4),
                 bitSize      = 32,
                 mode         = 'RW',
+                disp         = '{:d}',
             ))
 
         self.add(pr.RemoteVariable(

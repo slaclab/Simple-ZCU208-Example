@@ -87,6 +87,7 @@ class Root(pr.Root):
         # Useful pointers
         lmk      = self.XilinxZcu208.Hardware.Lmk
         i2cToSpi = self.XilinxZcu208.Hardware.I2cToSpi
+        dspCore  = self.XilinxZcu208.Application.DspCoreWrapper
 
         # Set the SPI clock rate
         i2cToSpi.SpiClockRate.setDisp('115kHz')
@@ -116,6 +117,14 @@ class Root(pr.Root):
 
             # Load the waveform data into DacSigGen
             self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
+
+            # Enable the DSP core now that LMK is up and running
+            dspCore.enable.set(True)
+
+            # Set reset, update the shadow variable to hardware then release reset
+            dspCore.DspDebug.RstDspCore.set(0x1)
+            dspCore.writeAndVerifyBlocks(force=True, recurse=True)
+            dspCore.DspDebug.RstDspCore.set(0x0)
 
             # Update all SW remote registers
             self.ReadAll()
