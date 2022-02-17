@@ -112,6 +112,7 @@ sudo cp /u1/ruckman/build/petalinux/SimpleZcu208Example/images/linux/system.bit 
 sudo cp /u1/ruckman/build/petalinux/SimpleZcu208Example/images/linux/BOOT.BIN   /u1/boot/.
 sudo cp /u1/ruckman/build/petalinux/SimpleZcu208Example/images/linux/image.ub   /u1/boot/.
 sudo cp /u1/ruckman/build/petalinux/SimpleZcu208Example/images/linux/boot.scr   /u1/boot/.
+sudo sync /u1/boot/
 sudo umount /u1/boot
 ```
 
