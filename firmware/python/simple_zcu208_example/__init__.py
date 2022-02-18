@@ -1,5 +1,6 @@
 from simple_zcu208_example._Analysis             import *
 from simple_zcu208_example._Application          import *
+from simple_zcu208_example._DacSigGenLoader      import *
 from simple_zcu208_example._DspDbgProcessor      import *
 from simple_zcu208_example._DspDebug             import *
 from simple_zcu208_example._DspCoreWrapper       import *

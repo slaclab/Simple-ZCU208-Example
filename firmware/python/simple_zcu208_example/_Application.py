@@ -36,3 +36,9 @@ class Application(pr.Device):
             offset       = 0x02_000000,
             expand       = True,
         ))
+
+        self.add(rfsoc.DacSigGenLoader(
+            DacSigGen = self.DacSigGen,
+            expand    = True,
+        ))
+
