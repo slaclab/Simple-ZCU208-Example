@@ -128,7 +128,10 @@ class Root(pr.Root):
             self.XilinxZcu208.RfDataConverter.Reset.set(0x1)
 
             # Load the waveform data into DacSigGen
-            self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
+            if self.XilinxZcu208.Application.DacSigGen.CsvFilePath.value() != '':
+                self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
+            else:
+                self.XilinxZcu208.Application.DacSigGenLoader.LoadSingleTones()
 
             # Enable the DSP core now that LMK is up and running
             dspCore.Analysis.enable.set(True)

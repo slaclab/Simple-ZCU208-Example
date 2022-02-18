@@ -53,10 +53,10 @@ class DacSigGenLoader(pr.Device):
             length = int(self._smplRate/self.Frequency.value())
 
             # Find an integer multiple of unit interval with respect to # of sample per clock cycle
+            wordLength = 1
             for i in range(1,(self.ramDepth//self.smplPerCycle)+1):
-                wordLength = (i*length)
-                if wordLength%self.smplPerCycle == 0:
-                    break
+                if (i*length)%self.smplPerCycle == 0:
+                    wordLength = (i*length)
 
             ## Check if couldn't find integer multiple
             if wordLength%self.smplPerCycle != 0:
@@ -70,7 +70,7 @@ class DacSigGenLoader(pr.Device):
                 w   = 2*np.pi*self.Frequency.value()
                 phi = self.Phase[ch].value()*np.pi/180.0
 
-                # Sweep through the 1 unit interval
+                # Load the waveforms data
                 for t in range(wordLength):
 
                     # Calculate the value
