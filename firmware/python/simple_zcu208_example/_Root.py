@@ -58,26 +58,38 @@ class Root(pr.Root):
         ##                              Data Path
         ##################################################################################
 
-        # Create rogue stream arrays
-        self.ringBufferAdc = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(8)]
-        self.ringBufferDac = [stream.TcpClient(ip,10000+2*(i+16)) for i in range(8)]
-        self.adcRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.dacRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.adcProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
-        self.dacProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
+        # Connect to ring buffer streams (port 10000+512*lane+2*tdest)
+        self.ringBufferAdc = [stream.TcpClient(ip,10000+(512*0)+2*(i+0))  for i in range(8)]
+        self.ringBufferDac = [stream.TcpClient(ip,10000+(512*0)+2*(i+16)) for i in range(8)]
+        self.ringBufferDbg =  stream.TcpClient(ip,10512) # Starting Stream TcpServer at Port=10512 and Port=10513 for DMA[1][0]
+
+        # Create stream rate limiters
+        self.rateDropAdc = [stream.RateDrop(True,1.0) for i in range(8)]
+        self.rateDropDac = [stream.RateDrop(True,1.0) for i in range(8)]
+        self.rateDropDbg =  stream.RateDrop(True,1.0)
+
+        # Create stream processors
+        self.processorAdc = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
+        self.processorDac = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
+        self.processorDbg = rfsoc.DspDbgProcessor()
+
+        # DSP Debug Ring Buffer Path
+        self.ringBufferDbg >> self.dataWriter.getChannel(32)
+        self.ringBufferDbg >> self.rateDropDbg >> self.processorDbg
+        self.add(self.processorDbg)
 
         # Connect the rogue stream arrays
         for i in range(8):
 
             # ADC Ring Buffer Path
             self.ringBufferAdc[i] >> self.dataWriter.getChannel(i+0)
-            self.ringBufferAdc[i] >> self.adcRateDrop[i] >> self.adcProcessor[i]
-            self.add(self.adcProcessor[i])
+            self.ringBufferAdc[i] >> self.rateDropAdc[i] >> self.processorAdc[i]
+            self.add(self.processorAdc[i])
 
             # DAC Ring Buffer Path
             self.ringBufferDac[i] >> self.dataWriter.getChannel(i+8)
-            self.ringBufferDac[i] >> self.dacRateDrop[i] >> self.dacProcessor[i]
-            self.add(self.dacProcessor[i])
+            self.ringBufferDac[i] >> self.rateDropDac[i] >> self.processorDac[i]
+            self.add(self.processorDac[i])
 
     ##################################################################################
 
