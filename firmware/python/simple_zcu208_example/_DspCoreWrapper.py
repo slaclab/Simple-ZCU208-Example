@@ -10,6 +10,8 @@
 
 import pyrogue as pr
 
+import surf.axi as axi
+
 import simple_zcu208_example                 as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 
@@ -45,7 +47,7 @@ class DspCoreWrapper(pr.Device):
             mode         = 'RW',
             disp         = '{:d}',
             value        = 0,
-            linkedGet    = lambda: int(self.DspDebug.DebugAddr.value()) + int(self.Analysis.Config[5].value())<<5,
-            linkedSet    = lambda value, write: self.DspDebug.DebugAddr.set(value&0x1F) and self.Analysis.Config[5].set(value>>5),
+            linkedGet    = lambda: self.DspDebug.DebugAddr.value()+32*self.Analysis.Config[5].value(),
+            linkedSet    = lambda value, write: self.DspDebug.DebugAddr.set(value&0x1F) or self.Analysis.Config[5].set(value>>5),
             dependencies = [self.DspDebug.DebugAddr,self.Analysis.Config[5]],
         ))

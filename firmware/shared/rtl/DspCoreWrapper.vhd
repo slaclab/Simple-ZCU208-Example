@@ -14,6 +14,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -55,39 +57,37 @@ architecture mapping of DspCoreWrapper is
 
    component analysis_0
       port (
-         adc_imag               : in  std_logic_vector(255 downto 0);
-         adc_real               : in  std_logic_vector(255 downto 0);
-         reset                  : in  std_logic_vector(0 downto 0);
-         valid_in               : in  std_logic_vector(0 downto 0);
+         adc_imag               : in  std_logic_vector (255 downto 0);
+         adc_real               : in  std_logic_vector (255 downto 0);
+         reset                  : in  std_logic_vector (0 to 0);
+         valid_in               : in  std_logic_vector (0 to 0);
          clk                    : in  std_logic;
          analysis_aresetn       : in  std_logic;
-         analysis_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
+         analysis_s_axi_awaddr  : in  std_logic_vector (11 downto 0);
          analysis_s_axi_awvalid : in  std_logic;
-         analysis_s_axi_wdata   : in  std_logic_vector(31 downto 0);
-         analysis_s_axi_wstrb   : in  std_logic_vector(3 downto 0);
+         analysis_s_axi_wdata   : in  std_logic_vector (31 downto 0);
+         analysis_s_axi_wstrb   : in  std_logic_vector (3 downto 0);
          analysis_s_axi_wvalid  : in  std_logic;
          analysis_s_axi_bready  : in  std_logic;
-         analysis_s_axi_araddr  : in  std_logic_vector(11 downto 0);
+         analysis_s_axi_araddr  : in  std_logic_vector (11 downto 0);
          analysis_s_axi_arvalid : in  std_logic;
          analysis_s_axi_rready  : in  std_logic;
-         receive_vo1            : out std_logic_vector(0 downto 0);
-         receive_vo2            : out std_logic_vector(0 downto 0);
-         evenimag               : out std_logic_vector(255 downto 0);
-         evenreal               : out std_logic_vector(255 downto 0);
-         oddimag                : out std_logic_vector(255 downto 0);
-         oddreal                : out std_logic_vector(255 downto 0);
-         ifft_opvalid           : out std_logic_vector(0 downto 0);
-         dacimag                : out std_logic_vector(255 downto 0);
-         dacreal                : out std_logic_vector(255 downto 0);
+         evenimag               : out std_logic_vector (255 downto 0);
+         evenreal               : out std_logic_vector (255 downto 0);
+         oddimag                : out std_logic_vector (255 downto 0);
+         oddreal                : out std_logic_vector (255 downto 0);
+         stream_en              : out std_logic_vector (0 to 0);
+         ifft_opvalid           : out std_logic_vector (0 to 0);
+         dacimag                : out std_logic_vector (255 downto 0);
+         dacreal                : out std_logic_vector (255 downto 0);
          analysis_s_axi_awready : out std_logic;
          analysis_s_axi_wready  : out std_logic;
-         analysis_s_axi_bresp   : out std_logic_vector(1 downto 0);
+         analysis_s_axi_bresp   : out std_logic_vector (1 downto 0);
          analysis_s_axi_bvalid  : out std_logic;
          analysis_s_axi_arready : out std_logic;
-         analysis_s_axi_rdata   : out std_logic_vector(31 downto 0);
-         analysis_s_axi_rresp   : out std_logic_vector(1 downto 0);
-         analysis_s_axi_rvalid  : out std_logic
-         );
+         analysis_s_axi_rdata   : out std_logic_vector (31 downto 0);
+         analysis_s_axi_rresp   : out std_logic_vector (1 downto 0);
+         analysis_s_axi_rvalid  : out std_logic);
    end component;
 
    constant ANALYSIS_INDEX_C   : natural := 0;
@@ -119,6 +119,9 @@ architecture mapping of DspCoreWrapper is
    signal dspValid   : sl := '1';
    signal dspRstL    : sl := '1';
    signal rstDspCore : sl := '0';
+
+   signal stream_en    : sl := '0';
+   signal ifft_opvalid : sl := '0';
 
 begin
 
@@ -179,6 +182,8 @@ begin
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
          -- Debug Interface
+         stream_en(0)           => stream_en,
+         ifft_opvalid(0)        => ifft_opvalid,
          evenreal               => dspDebugVec(0),
          evenimag               => dspDebugVec(1),
          oddreal                => dspDebugVec(2),
@@ -208,7 +213,7 @@ begin
    begin
       idx := conv_integer(debugAddr);
       if rising_edge(dspClk) then
-         debugValid <= dspValid after TPD_G;
+         debugValid <= stream_en after TPD_G;
          -- Check of even channel
          if (debugAddr(0) = '0') then
             debugValue(15 downto 0)  <= dspDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;

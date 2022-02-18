@@ -76,9 +76,9 @@ class GuiTop(Display):
         dacDisplay = guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='Dac', numCh=self.numCh)
         self.tab.addTab(dacDisplay,'DAC Waveforms')
 
-        # DSP Debug Live Display (Tab Index=4)
-        dspDebugDisplay = guiUser.DspDebugDisplay(parent=None, init_channel=Channel)
-        self.tab.addTab(dspDebugDisplay,'DSP Debug')
+        # # DSP Debug Live Display (Tab Index=4)
+        # dspDebugDisplay = guiUser.DspDebugDisplay(parent=None, init_channel=Channel)
+        # self.tab.addTab(dspDebugDisplay,'DSP Debug')
 
         # Set the default Tab view
         self.tab.setCurrentIndex(1)
