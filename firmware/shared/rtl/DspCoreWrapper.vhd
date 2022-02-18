@@ -116,12 +116,21 @@ architecture mapping of DspCoreWrapper is
    signal debugAddr   : slv(4 downto 0)         := (others => '0');
    signal debugValid  : sl;
 
-   signal dspValid   : sl := '1';
    signal dspRstL    : sl := '1';
    signal rstDspCore : sl := '0';
 
    signal stream_en    : sl := '0';
    signal ifft_opvalid : sl := '0';
+
+   attribute dont_touch                 : string;
+   attribute dont_touch of dspDebugVec  : signal is "TRUE";
+   attribute dont_touch of debugValue   : signal is "TRUE";
+   attribute dont_touch of debugAddr    : signal is "TRUE";
+   attribute dont_touch of debugValid   : signal is "TRUE";
+   attribute dont_touch of dspRstL      : signal is "TRUE";
+   attribute dont_touch of rstDspCore   : signal is "TRUE";
+   attribute dont_touch of stream_en    : signal is "TRUE";
+   attribute dont_touch of ifft_opvalid : signal is "TRUE";
 
 begin
 
@@ -211,7 +220,7 @@ begin
    process(debugAddr, dspClk)
       variable idx : natural;
    begin
-      idx := conv_integer(debugAddr);
+      idx := conv_integer(debugAddr(4 downto 1));
       if rising_edge(dspClk) then
          debugValid <= stream_en after TPD_G;
          -- Check of even channel
