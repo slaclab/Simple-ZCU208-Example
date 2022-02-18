@@ -81,8 +81,7 @@ class GuiTop(Display):
         self.tab.addTab(dspDebugDisplay,'DSP Debug')
 
         # Set the default Tab view
-        # self.tab.setCurrentIndex(1)
-        self.tab.setCurrentIndex(4)
+        self.tab.setCurrentIndex(1)
 
         # Resize the window
         self.resize(self.sizeX, self.sizeY)

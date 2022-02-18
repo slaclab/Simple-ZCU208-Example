@@ -119,11 +119,11 @@ class Root(pr.Root):
             self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
 
             # Enable the DSP core now that LMK is up and running
-            dspCore.enable.set(True)
+            dspCore.Analysis.enable.set(True)
 
             # Set reset, update the shadow variable to hardware then release reset
             dspCore.DspDebug.RstDspCore.set(0x1)
-            dspCore.writeAndVerifyBlocks(force=True, recurse=True)
+            dspCore.Analysis.writeAndVerifyBlocks(force=True, recurse=True)
             dspCore.DspDebug.RstDspCore.set(0x0)
 
             # Update all SW remote registers

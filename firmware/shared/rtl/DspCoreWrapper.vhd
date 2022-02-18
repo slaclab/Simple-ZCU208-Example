@@ -53,8 +53,6 @@ end DspCoreWrapper;
 
 architecture mapping of DspCoreWrapper is
 
-   constant NUM_DBG_C : positive := 4;
-
    component analysis_0
       port (
          adc_imag               : in  std_logic_vector(255 downto 0);
@@ -95,7 +93,8 @@ architecture mapping of DspCoreWrapper is
    constant ANALYSIS_INDEX_C   : natural := 0;
    constant RING_BUFF_INDEX_C  : natural := 1;
    constant DEBUG_INDEX_C      : natural := 2;
-   constant NUM_AXIL_MASTERS_C : natural := 3;
+   constant RATE_LIMIT_INDEX_C : natural := 3;
+   constant NUM_AXIL_MASTERS_C : natural := 4;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 24, 20);
 
@@ -104,14 +103,22 @@ architecture mapping of DspCoreWrapper is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
+   signal axisMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
+   signal axisSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
+
    signal dspReadMaster  : AxiLiteReadMasterType;
    signal dspReadSlave   : AxiLiteReadSlaveType;
    signal dspWriteMaster : AxiLiteWriteMasterType;
    signal dspWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal dspDebug   : Slv256Array(NUM_DBG_C-1 downto 0) := (others => (others => '0'));
-   signal dspRstL    : sl;
-   signal rstDspCore : sl;
+   signal dspDebugVec : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal debugValue  : slv(31 downto 0)        := (others => '0');
+   signal debugAddr   : slv(4 downto 0)         := (others => '0');
+   signal debugValid  : sl;
+
+   signal dspValid   : sl := '1';
+   signal dspRstL    : sl := '1';
+   signal rstDspCore : sl := '0';
 
 begin
 
@@ -120,27 +127,6 @@ begin
    -- Loopback unused channels
    dspDac(7 downto 2) <= dspAdc(7 downto 2);
 
-   U_AxiLiteAsync : entity surf.AxiLiteAsync
-      generic map (
-         TPD_G           => TPD_G,
-         COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => 32)
-      port map (
-         -- Slave Interface
-         sAxiClk         => axilClk,
-         sAxiClkRst      => axilRst,
-         sAxiReadMaster  => axilReadMaster,
-         sAxiReadSlave   => axilReadSlave,
-         sAxiWriteMaster => axilWriteMaster,
-         sAxiWriteSlave  => axilWriteSlave,
-         -- Master Interface
-         mAxiClk         => dspClk,
-         mAxiClkRst      => dspRst,
-         mAxiReadMaster  => dspReadMaster,
-         mAxiReadSlave   => dspReadSlave,
-         mAxiWriteMaster => dspWriteMaster,
-         mAxiWriteSlave  => dspWriteSlave);
-
    U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
@@ -148,16 +134,37 @@ begin
          NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
          MASTERS_CONFIG_G   => AXIL_CONFIG_C)
       port map (
-         axiClk              => dspClk,
-         axiClkRst           => dspRst,
-         sAxiWriteMasters(0) => dspWriteMaster,
-         sAxiWriteSlaves(0)  => dspWriteSlave,
-         sAxiReadMasters(0)  => dspReadMaster,
-         sAxiReadSlaves(0)   => dspReadSlave,
+         axiClk              => axilClk,
+         axiClkRst           => axilRst,
+         sAxiWriteMasters(0) => axilWriteMaster,
+         sAxiWriteSlaves(0)  => axilWriteSlave,
+         sAxiReadMasters(0)  => axilReadMaster,
+         sAxiReadSlaves(0)   => axilReadSlave,
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
+
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => 12)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axilClk,
+         sAxiClkRst      => axilRst,
+         sAxiReadMaster  => axilReadMasters(ANALYSIS_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(ANALYSIS_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(ANALYSIS_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(ANALYSIS_INDEX_C),
+         -- Master Interface
+         mAxiClk         => dspClk,
+         mAxiClkRst      => dspRst,
+         mAxiReadMaster  => dspReadMaster,
+         mAxiReadSlave   => dspReadSlave,
+         mAxiWriteMaster => dspWriteMaster,
+         mAxiWriteSlave  => dspWriteSlave);
 
    U_analysis : analysis_0
       port map (
@@ -172,70 +179,106 @@ begin
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
          -- Debug Interface
-         evenreal               => dspDebug(0),
-         evenimag               => dspDebug(1),
-         oddreal                => dspDebug(2),
-         oddimag                => dspDebug(3),
+         evenreal               => dspDebugVec(0),
+         evenimag               => dspDebugVec(1),
+         oddreal                => dspDebugVec(2),
+         oddimag                => dspDebugVec(3),
          -- AXI-Lite interface
          analysis_aresetn       => dspRstL,
-         analysis_s_axi_awaddr  => axilWriteMasters(ANALYSIS_INDEX_C).awaddr(11 downto 0),
-         analysis_s_axi_awvalid => axilWriteMasters(ANALYSIS_INDEX_C).awvalid,
-         analysis_s_axi_awready => axilWriteSlaves(ANALYSIS_INDEX_C).awready,
-         analysis_s_axi_wdata   => axilWriteMasters(ANALYSIS_INDEX_C).wdata,
-         analysis_s_axi_wstrb   => axilWriteMasters(ANALYSIS_INDEX_C).wstrb,
-         analysis_s_axi_wvalid  => axilWriteMasters(ANALYSIS_INDEX_C).wvalid,
-         analysis_s_axi_wready  => axilWriteSlaves(ANALYSIS_INDEX_C).wready,
-         analysis_s_axi_bresp   => axilWriteSlaves(ANALYSIS_INDEX_C).bresp,
-         analysis_s_axi_bvalid  => axilWriteSlaves(ANALYSIS_INDEX_C).bvalid,
-         analysis_s_axi_bready  => axilWriteMasters(ANALYSIS_INDEX_C).bready,
-         analysis_s_axi_araddr  => axilReadMasters(ANALYSIS_INDEX_C).araddr(11 downto 0),
-         analysis_s_axi_arvalid => axilReadMasters(ANALYSIS_INDEX_C).arvalid,
-         analysis_s_axi_arready => axilReadSlaves(ANALYSIS_INDEX_C).arready,
-         analysis_s_axi_rdata   => axilReadSlaves(ANALYSIS_INDEX_C).rdata,
-         analysis_s_axi_rresp   => axilReadSlaves(ANALYSIS_INDEX_C).rresp,
-         analysis_s_axi_rvalid  => axilReadSlaves(ANALYSIS_INDEX_C).rvalid,
-         analysis_s_axi_rready  => axilReadMasters(ANALYSIS_INDEX_C).rready);
+         analysis_s_axi_awaddr  => dspWriteMaster.awaddr(11 downto 0),
+         analysis_s_axi_awvalid => dspWriteMaster.awvalid,
+         analysis_s_axi_awready => dspWriteSlave.awready,
+         analysis_s_axi_wdata   => dspWriteMaster.wdata,
+         analysis_s_axi_wstrb   => dspWriteMaster.wstrb,
+         analysis_s_axi_wvalid  => dspWriteMaster.wvalid,
+         analysis_s_axi_wready  => dspWriteSlave.wready,
+         analysis_s_axi_bresp   => dspWriteSlave.bresp,
+         analysis_s_axi_bvalid  => dspWriteSlave.bvalid,
+         analysis_s_axi_bready  => dspWriteMaster.bready,
+         analysis_s_axi_araddr  => dspReadMaster.araddr(11 downto 0),
+         analysis_s_axi_arvalid => dspReadMaster.arvalid,
+         analysis_s_axi_arready => dspReadSlave.arready,
+         analysis_s_axi_rdata   => dspReadSlave.rdata,
+         analysis_s_axi_rresp   => dspReadSlave.rresp,
+         analysis_s_axi_rvalid  => dspReadSlave.rvalid,
+         analysis_s_axi_rready  => dspReadMaster.rready);
 
-   U_DebugRingBuffer : entity axi_soc_ultra_plus_core.AppRingBuffer
+   process(debugAddr, dspClk)
+      variable idx : natural;
+   begin
+      idx := conv_integer(debugAddr);
+      if rising_edge(dspClk) then
+         debugValid <= dspValid after TPD_G;
+         -- Check of even channel
+         if (debugAddr(0) = '0') then
+            debugValue(15 downto 0)  <= dspDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;
+            debugValue(31 downto 16) <= dspDebugVec(1)(16*idx+15 downto 16*idx) after TPD_G;
+         -- Else odd channel
+         else
+            debugValue(15 downto 0)  <= dspDebugVec(2)(16*idx+15 downto 16*idx) after TPD_G;
+            debugValue(31 downto 16) <= dspDebugVec(3)(16*idx+15 downto 16*idx) after TPD_G;
+         end if;
+      end if;
+   end process;
+
+   U_AxiStreamRingBuffer : entity surf.AxiStreamRingBuffer
       generic map (
-         TPD_G            => TPD_G,
-         EN_ADC_BUFF_G    => true,       -- Debug path
-         EN_DAC_BUFF_G    => false,      -- DAC not used
-         NUM_ADC_CH_G     => NUM_DBG_C,  -- Mapping debug to ADC ports
-         NUM_DAC_CH_G     => 1,          -- Unused
-         RAM_ADDR_WIDTH_G => 10,
-         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RING_BUFF_INDEX_C).baseAddr)
+         TPD_G               => TPD_G,
+         SYNTH_MODE_G        => "xpm",
+         DATA_BYTES_G        => (32/8),
+         RAM_ADDR_WIDTH_G    => 14,
+         AXI_STREAM_CONFIG_G => DMA_AXIS_CONFIG_C)
       port map (
-         -- DMA Interface (dmaClk domain)
-         dmaClk          => dmaClk,
-         dmaRst          => dmaRst,
-         dmaIbMaster     => dmaIbMaster,
-         dmaIbSlave      => dmaIbSlave,
-         -- ADC/DAC Interface (dspClk domain)
-         dspClk          => dspClk,
-         dspRst          => dspRst,
-         dspAdc          => dspDebug,
-         dspDac          => (others => (others => '0')),
-         -- AXI-Lite Interface (axilClk domain)
-         axilClk         => dspClk,
-         axilRst         => dspRst,
+         -- Data to store in ring buffer (dataClk domain)
+         dataClk         => dspClk,
+         dataValid       => debugValid,
+         dataValue       => debugValue,
+         -- AXI-Lite interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(RING_BUFF_INDEX_C),
          axilReadSlave   => axilReadSlaves(RING_BUFF_INDEX_C),
          axilWriteMaster => axilWriteMasters(RING_BUFF_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(RING_BUFF_INDEX_C));
+         axilWriteSlave  => axilWriteSlaves(RING_BUFF_INDEX_C),
+         -- AXI-Stream Interface (axilClk domain)
+         axisClk         => dmaClk,
+         axisRst         => dmaRst,
+         axisMaster      => axisMaster,
+         axisSlave       => axisSlave);
+
+   U_RateLimiter : entity surf.AxiStreamFrameRateLimiter
+      generic map (
+         TPD_G              => TPD_G,
+         AXIS_CLK_FREQ_G    => DMA_CLK_FREQ_C,
+         DEFAULT_MAX_RATE_G => 2)       -- 2 Hz per channel
+      port map (
+         -- AXI Stream Interface (axisClk domain)
+         axisClk         => dmaClk,
+         axisRst         => dmaRst,
+         sAxisMaster     => axisMaster,
+         sAxisSlave      => axisSlave,
+         mAxisMaster     => dmaIbMaster,
+         mAxisSlave      => dmaIbSlave,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         axilReadMaster  => axilReadMasters(RATE_LIMIT_INDEX_C),
+         axilReadSlave   => axilReadSlaves(RATE_LIMIT_INDEX_C),
+         axilWriteMaster => axilWriteMasters(RATE_LIMIT_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(RATE_LIMIT_INDEX_C));
 
    U_DebugReg : entity work.DspCoreDebugReg
       generic map (
-         TPD_G     => TPD_G,
-         NUM_DBG_G => NUM_DBG_C)
+         TPD_G => TPD_G)
       port map (
-         -- Clock and Reset
+         -- Debugging Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         -- Debugging Interface
-         dspDebug        => dspDebug,
          rstDspCore      => rstDspCore,
-         -- AXI-Lite Interface
+         debugAddr       => debugAddr,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(DEBUG_INDEX_C),
          axilReadSlave   => axilReadSlaves(DEBUG_INDEX_C),
          axilWriteMaster => axilWriteMasters(DEBUG_INDEX_C),

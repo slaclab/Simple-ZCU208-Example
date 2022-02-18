@@ -22,12 +22,14 @@ class Analysis(pr.Device):
             mode         = 'RO',
         ))
 
-        for i in range(1,5):
+        bitSize = [32,32,32,32,6]
+
+        for i in range(1,6):
             self.add(pr.RemoteVariable(
                 name         = f'Config[{i}]',
                 description  = 'Configuration Register',
                 offset       = (i*0x4),
-                bitSize      = 32,
+                bitSize      = bitSize[i-1],
                 mode         = 'RW',
                 disp         = '{:d}',
             ))

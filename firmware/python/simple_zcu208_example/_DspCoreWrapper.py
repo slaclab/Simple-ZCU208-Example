@@ -18,20 +18,34 @@ class DspCoreWrapper(pr.Device):
         super().__init__(**kwargs)
 
         self.add(rfsoc.Analysis(
-            offset   = 0x000_00000,
-            expand   = True,
+            offset  = 0x000_00000,
+            enabled = False, # Do not configure until after LMK is up
+            expand  = True,
         ))
 
-        self.add(rfsoc_utility.AppRingBuffer(
-            name     = 'DebugRingBuffer',
-            offset   = 0x001_00000,
-            numAdcCh = 4, # Must match NUM_ADC_CH_G config
-            numDacCh = 0, # Must match NUM_DAC_CH_G config
+        self.add(axi.AxiStreamRingBuffer(
+            name   = 'DebugRingBuffer',
+            offset = 0x001_00000,
             # expand   = True,
-            hidden   = True,
         ))
 
         self.add(rfsoc.DspDebug(
-            offset   = 0x002_00000,
-            expand   = True,
+            offset = 0x002_00000,
+            expand = True,
+        ))
+
+        self.add(axi.AxiStreamFrameRateLimiter(
+            name   = 'RateLimiter',
+            offset = 0x003_00000,
+            hidden = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugChSel',
+            mode         = 'RW',
+            disp         = '{:d}',
+            value        = 0,
+            linkedGet    = lambda: int(self.DspDebug.DebugAddr.value()) + int(self.Analysis.Config[5].value())<<5,
+            linkedSet    = lambda value, write: self.DspDebug.DebugAddr.set(value&0x1F) and self.Analysis.Config[5].set(value>>5),
+            dependencies = [self.DspDebug.DebugAddr,self.Analysis.Config[5]],
         ))

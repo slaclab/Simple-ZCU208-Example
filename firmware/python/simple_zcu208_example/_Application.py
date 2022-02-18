@@ -34,6 +34,5 @@ class Application(pr.Device):
 
         self.add(rfsoc.DspCoreWrapper(
             offset       = 0x02_000000,
-            enabled      = False, # Do not configure until after LMK is up
             expand       = True,
         ))

@@ -18,23 +18,22 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 
 entity DspCoreDebugReg is
    generic (
-      TPD_G     : time     := 1 ns;
-      NUM_DBG_G : positive := 4);
+      TPD_G : time := 1 ns);
    port (
-      -- Clock and Reset
+      -- Debugging Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      -- Debugging Interface
-      dspDebug        : in  Slv256Array(NUM_DBG_G-1 downto 0);
       rstDspCore      : out sl;
-      -- AXI-Lite Interface
+      debugAddr       : out slv(4 downto 0);
+      -- AXI-Lite Interface (axilClk domain)
+      axilClk         : in  sl;
+      axilRst         : in  sl;
       axilReadMaster  : in  AxiLiteReadMasterType;
       axilReadSlave   : out AxiLiteReadSlaveType;
       axilWriteMaster : in  AxiLiteWriteMasterType;
@@ -45,12 +44,14 @@ architecture rtl of DspCoreDebugReg is
 
    type RegType is record
       rstDspCore     : sl;
+      debugAddr      : slv(4 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
 
    constant REG_INIT_C : RegType := (
       rstDspCore     => '0',
+      debugAddr      => (others => '0'),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -59,7 +60,7 @@ architecture rtl of DspCoreDebugReg is
 
 begin
 
-   comb : process (axilReadMaster, axilWriteMaster, dspDebug, dspRst, r) is
+   comb : process (axilReadMaster, axilRst, axilWriteMaster, r) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndpointType;
    begin
@@ -73,11 +74,8 @@ begin
       -- Determine the transaction type
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
-      for i in 0 to NUM_DBG_G-1 loop
-         axiSlaveRegisterR(axilEp, toSlv(32*i, 12), 0, dspDebug(i));
-      end loop;
-
-      axiSlaveRegister(axilEp, x"FFC", 0, v.rstDspCore);
+      axiSlaveRegister(axilEp, x"00", 0, v.rstDspCore);
+      axiSlaveRegister(axilEp, x"04", 0, v.debugAddr);
 
       -- Close the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -85,10 +83,9 @@ begin
       -- Outputs
       axilReadSlave  <= r.axilReadSlave;
       axilWriteSlave <= r.axilWriteSlave;
-      rstDspCore     <= r.rstDspCore;
 
       -- Reset
-      if (dspRst = '1') then
+      if (axilRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -97,11 +94,28 @@ begin
 
    end process comb;
 
-   seq : process (dspClk) is
+   seq : process (axilClk) is
    begin
-      if (rising_edge(dspClk)) then
+      if (rising_edge(axilClk)) then
          r <= rin after TPD_G;
       end if;
    end process seq;
+
+   U_rstDspCore : entity surf.Synchronizer
+      generic map(
+         TPD_G => TPD_G)
+      port map(
+         clk     => dspClk,
+         dataIn  => r.rstDspCore,
+         dataOut => rstDspCore);
+
+   U_debugAddr : entity surf.SynchronizerVector
+      generic map(
+         TPD_G   => TPD_G,
+         WIDTH_G => 5)
+      port map(
+         clk     => dspClk,
+         dataIn  => r.debugAddr,
+         dataOut => debugAddr);
 
 end architecture rtl;
