@@ -105,15 +105,15 @@ class DspDebugDisplay(PyDMFrame):
         fl.addWidget(w)
 
         w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMin')
-        w.setAlignment(Qt.AlignRight)
+        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
         w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMean')
-        w.setAlignment(Qt.AlignRight)
+        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
         w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMax')
-        w.setAlignment(Qt.AlignRight)
+        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
         rstButton = PyDMPushButton(label="Full Scale")
