@@ -37,7 +37,7 @@ class DacSigGenLoader(pr.Device):
             name    = 'Frequency',
             typeStr = 'Float[np]',
             units   = 'Hz',
-            value   = 300.E+6,
+            value   = 200.E+6,
         ))
 
         for i in range(8):
@@ -75,7 +75,8 @@ class DacSigGenLoader(pr.Device):
             wordLength = -1
             for x in commonInt:
                 value = float(x)*freqRatio
-                if np.mod(x*freqRatio, 1) == 0:
+                # Check for zero remainer and multiple of samples per cycle
+                if (np.mod(value, 1) == 0) and (np.mod(value, self.smplPerCycle) == 0):
                     wordLength = int(value)
                     break
 
@@ -114,3 +115,4 @@ class DacSigGenLoader(pr.Device):
 
             # Toggle flags (if flags already active)
             self.DacSigGen.RefreshDacFsm()
+

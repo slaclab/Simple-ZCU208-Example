@@ -51,3 +51,35 @@ class DspCoreWrapper(pr.Device):
             linkedSet    = lambda value, write: self.DspDebug.DebugAddr.set(value&0x1F) or self.Analysis.Config[5].set(value>>5),
             dependencies = [self.DspDebug.DebugAddr,self.Analysis.Config[5]],
         ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugChFreqMin',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMin = {self.GetFreqMHz(value=self.DebugChSel.value(),offset=-1.0):.1f} MHz',
+            dependencies = [self.DebugChSel],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugChFreqMean',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMean = {self.GetFreqMHz(value=self.DebugChSel.value(),offset=0.0):.1f} MHz',
+            dependencies = [self.DebugChSel],
+            hidden       = True,
+        ))
+
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugChFreqMax',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMax = {self.GetFreqMHz(value=self.DebugChSel.value(),offset=1.0):.1f} MHz',
+            dependencies = [self.DebugChSel],
+            hidden       = True,
+        ))
+
+
+    def GetFreqMHz(self,value=0,offset=0.0):
+        if value<1024:
+            return (float(self.DebugChSel.value())+offset)*5E3/2048.0
+        else:
+            return (float(2047-self.DebugChSel.value())-offset)*-5E3/2048.0

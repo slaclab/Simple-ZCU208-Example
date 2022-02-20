@@ -9,7 +9,7 @@
 #-----------------------------------------------------------------------------
 
 from pydm.widgets.frame import PyDMFrame
-from pydm.widgets import PyDMWaveformPlot, PyDMSpinbox, PyDMPushButton
+from pydm.widgets import PyDMWaveformPlot, PyDMSpinbox, PyDMPushButton, PyDMLabel
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QGroupBox, QDoubleSpinBox, QLabel
@@ -22,10 +22,10 @@ import pyrogue as pr
 class DspDebugDisplay(PyDMFrame):
     def __init__(self, parent=None, init_channel=None):
         PyDMFrame.__init__(self, parent, init_channel)
-        self._node      = None
-        self.path       = f'{init_channel}.DspDbgProcessor'
-        self.DebugChSel = f'{init_channel}.XilinxZcu208.Application.DspCoreWrapper.DebugChSel'
-        self.color      = ["white","red", "yellow", "dodgerblue"]
+        self._node   = None
+        self.path    = f'{init_channel}.DspDbgProcessor'
+        self.dspPath = f'{init_channel}.XilinxZcu208.Application.DspCoreWrapper'
+        self.color   = ["white","red", "yellow", "dodgerblue"]
 
     def resetScales(self):
         # Reset the auto-ranging
@@ -92,7 +92,7 @@ class DspDebugDisplay(PyDMFrame):
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
-        w = PyDMSpinbox(parent=None, init_channel=self.DebugChSel)
+        w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DebugChSel')
         w.setAlignment(Qt.AlignRight)
         w.setRange(0,2047)
         w.precision             = 0
@@ -104,7 +104,15 @@ class DspDebugDisplay(PyDMFrame):
         w.writeOnPress          = True
         fl.addWidget(w)
 
-        w = QLabel('')
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMin')
+        w.setAlignment(Qt.AlignRight)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMean')
+        w.setAlignment(Qt.AlignRight)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMax')
         w.setAlignment(Qt.AlignRight)
         fl.addWidget(w)
 
@@ -112,8 +120,8 @@ class DspDebugDisplay(PyDMFrame):
         rstButton.clicked.connect(self.resetScales)
         fl.addWidget(rstButton)
 
-        w = QLabel('')
-        w.setAlignment(Qt.AlignRight)
-        fl.addWidget(w)
+        # w = QLabel('')
+        # w.setAlignment(Qt.AlignRight)
+        # fl.addWidget(w)
 
         #-----------------------------------------------------------------------------
