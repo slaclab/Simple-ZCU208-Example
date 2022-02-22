@@ -225,12 +225,12 @@ begin
          debugValid <= stream_en after TPD_G;
          -- Check of even channel
          if (debugAddr(0) = '0') then
-            debugValue(15 downto 0)  <= dspDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(1)(16*idx+15 downto 16*idx) after TPD_G;
+            debugValue(15 downto 0)  <= dspDebugVec(0)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
+            debugValue(31 downto 16) <= dspDebugVec(1)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
          -- Else odd channel
          else
-            debugValue(15 downto 0)  <= dspDebugVec(2)(16*idx+15 downto 16*idx) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(3)(16*idx+15 downto 16*idx) after TPD_G;
+            debugValue(15 downto 0)  <= dspDebugVec(2)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
+            debugValue(31 downto 16) <= dspDebugVec(3)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
          end if;
       end if;
    end process;
