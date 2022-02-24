@@ -18,8 +18,8 @@ coef_bits = 16;
 coef_bin_pt = 15;
 
 
-pass_band_freq  = (0.6)/(number_subband); %0.6
-stop_band_freq  = (1.25)/(number_subband);%1.25
+pass_band_freq  = (0.5)/(number_subband); %0.6
+stop_band_freq  = (1.0)/(number_subband);%1.25
 
 filt = firpm(filt_len-1, [0,pass_band_freq,stop_band_freq,1], {'myfrf', [1 1 0 0]}, [pass_band_weight, stop_band_weight]);
 % filt = ht(1:32:end)*32;
@@ -96,3 +96,4 @@ WNB_imag=reshape(WNA_imag,num_lane,number_channels/num_lane/2);
 WNB_complex=WNB_real+WNB_imag*2^WN_BL;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Baseband excitation
+Tcoef_delay=8;
