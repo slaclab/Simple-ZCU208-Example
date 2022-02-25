@@ -25,6 +25,15 @@ class Application(pr.Device):
         ))
 
         self.add(rfsoc_utility.DacSigGen(
+            name         = 'AdcSigGen',
+            offset       = 0x03_000000,
+            numCh        = 8,  # Must match NUM_CH_G config
+            ramWidth     = 10, # Must match RAM_ADDR_WIDTH_G config
+            smplPerCycle = 16, # Must match SAMPLE_PER_CYCLE_G config
+            # expand       = True,
+        ))
+
+        self.add(rfsoc_utility.DacSigGen(
             offset       = 0x01_000000,
             numCh        = 8,  # Must match NUM_CH_G config
             ramWidth     = 10, # Must match RAM_ADDR_WIDTH_G config
@@ -35,6 +44,12 @@ class Application(pr.Device):
         self.add(rfsoc.DspCoreWrapper(
             offset       = 0x02_000000,
             expand       = True,
+        ))
+
+        self.add(rfsoc.DacSigGenLoader(
+            name      = 'AdcSigGenLoader',
+            DacSigGen = self.AdcSigGen,
+            expand    = True,
         ))
 
         self.add(rfsoc.DacSigGenLoader(

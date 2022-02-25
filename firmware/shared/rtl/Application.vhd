@@ -60,7 +60,8 @@ architecture mapping of Application is
    constant RING_INDEX_C       : natural := 0;
    constant DAC_SIG_INDEX_C    : natural := 1;
    constant DSP_CORE_INDEX_C   : natural := 2;
-   constant NUM_AXIL_MASTERS_C : natural := 3;
+   constant ADC_SIG_INDEX_C    : natural := 3;
+   constant NUM_AXIL_MASTERS_C : natural := 4;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 28, 24);
 
@@ -69,20 +70,12 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc    : Slv256Array(7 downto 0) := (others => (others => '0'));
-   signal dac    : Slv256Array(7 downto 0) := (others => (others => '0'));
+   signal adc : Slv256Array(7 downto 0) := (others => (others => '0'));
+   signal dac : Slv256Array(7 downto 0) := (others => (others => '0'));
+
    signal dspOut : Slv256Array(7 downto 0) := (others => (others => '0'));
 
 begin
-
-   process(dspClk)
-   begin
-      -- Help with making timing
-      if rising_edge(dspClk) then
-         adc    <= dspAdc after TPD_G;
-         dspDac <= dac    after TPD_G;
-      end if;
-   end process;
 
    U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
@@ -101,6 +94,27 @@ begin
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
+
+   U_AdcSigGen : entity axi_soc_ultra_plus_core.DacSigGen
+      generic map (
+         TPD_G              => TPD_G,
+         NUM_CH_G           => 8,
+         RAM_ADDR_WIDTH_G   => RAM_ADDR_WIDTH_C,
+         SAMPLE_PER_CYCLE_G => 16,
+         AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(ADC_SIG_INDEX_C).baseAddr)
+      port map (
+         -- DAC Interface (dspClk domain)
+         dspClk          => dspClk,
+         dspRst          => dspRst,
+         dspDacIn        => dspAdc,
+         dspDacOut       => adc,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         axilReadMaster  => axilReadMasters(ADC_SIG_INDEX_C),
+         axilReadSlave   => axilReadSlaves(ADC_SIG_INDEX_C),
+         axilWriteMaster => axilWriteMasters(ADC_SIG_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(ADC_SIG_INDEX_C));
 
    U_DspCoreWrapper : entity work.DspCoreWrapper
       generic map (
@@ -125,34 +139,6 @@ begin
          axilWriteMaster => axilWriteMasters(DSP_CORE_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DSP_CORE_INDEX_C));
 
-   U_AppRingBuffer : entity axi_soc_ultra_plus_core.AppRingBuffer
-      generic map (
-         TPD_G            => TPD_G,
-         EN_ADC_BUFF_G    => true,
-         EN_DAC_BUFF_G    => true,
-         NUM_ADC_CH_G     => NUM_ADC_CH_C,
-         NUM_DAC_CH_G     => NUM_DAC_CH_C,
-         RAM_ADDR_WIDTH_G => RAM_ADDR_WIDTH_C,
-         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RING_INDEX_C).baseAddr)
-      port map (
-         -- DMA Interface (dmaClk domain)
-         dmaClk          => dmaClk,
-         dmaRst          => dmaRst,
-         dmaIbMaster     => dmaIbMasters(0),
-         dmaIbSlave      => dmaIbSlaves(0),
-         -- ADC/DAC Interface (dspClk domain)
-         dspClk          => dspClk,
-         dspRst          => dspRst,
-         dspAdc          => adc(NUM_ADC_CH_C-1 downto 0),
-         dspDac          => dac(NUM_DAC_CH_C-1 downto 0),
-         -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axilClk,
-         axilRst         => axilRst,
-         axilReadMaster  => axilReadMasters(RING_INDEX_C),
-         axilReadSlave   => axilReadSlaves(RING_INDEX_C),
-         axilWriteMaster => axilWriteMasters(RING_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(RING_INDEX_C));
-
    U_DacSigGen : entity axi_soc_ultra_plus_core.DacSigGen
       generic map (
          TPD_G              => TPD_G,
@@ -173,5 +159,35 @@ begin
          axilReadSlave   => axilReadSlaves(DAC_SIG_INDEX_C),
          axilWriteMaster => axilWriteMasters(DAC_SIG_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DAC_SIG_INDEX_C));
+
+   U_AppRingBuffer : entity axi_soc_ultra_plus_core.AppRingBuffer
+      generic map (
+         TPD_G            => TPD_G,
+         EN_ADC_BUFF_G    => true,
+         EN_DAC_BUFF_G    => true,
+         NUM_ADC_CH_G     => NUM_ADC_CH_C,
+         NUM_DAC_CH_G     => NUM_DAC_CH_C,
+         RAM_ADDR_WIDTH_G => RAM_ADDR_WIDTH_C,
+         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RING_INDEX_C).baseAddr)
+      port map (
+         -- DMA Interface (dmaClk domain)
+         dmaClk          => dmaClk,
+         dmaRst          => dmaRst,
+         dmaIbMaster     => dmaIbMasters(0),
+         dmaIbSlave      => dmaIbSlaves(0),
+         -- ADC/DAC Interface (dspClk domain)
+         dspClk          => dspClk,
+         dspRst          => dspRst,
+         dspAdc          => adc,
+         dspDac          => dac,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         axilReadMaster  => axilReadMasters(RING_INDEX_C),
+         axilReadSlave   => axilReadSlaves(RING_INDEX_C),
+         axilWriteMaster => axilWriteMasters(RING_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(RING_INDEX_C));
+
+   dspDac <= dac;
 
 end mapping;

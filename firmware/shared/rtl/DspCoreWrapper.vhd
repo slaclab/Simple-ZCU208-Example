@@ -57,39 +57,38 @@ architecture mapping of DspCoreWrapper is
 
    component analysis_0
       port (
-         adc_imag               : in  std_logic_vector (255 downto 0);
-         adc_real               : in  std_logic_vector (255 downto 0);
-         reset                  : in  std_logic_vector (0 to 0);
-         valid_in               : in  std_logic_vector (0 to 0);
+         adc_imag               : in  std_logic_vector(255 downto 0);
+         adc_real               : in  std_logic_vector(255 downto 0);
+         reset                  : in  std_logic_vector(0 downto 0);
+         valid_in               : in  std_logic_vector(0 downto 0);
          clk                    : in  std_logic;
          analysis_aresetn       : in  std_logic;
-         analysis_s_axi_awaddr  : in  std_logic_vector (11 downto 0);
+         analysis_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
          analysis_s_axi_awvalid : in  std_logic;
-         analysis_s_axi_wdata   : in  std_logic_vector (31 downto 0);
-         analysis_s_axi_wstrb   : in  std_logic_vector (3 downto 0);
+         analysis_s_axi_wdata   : in  std_logic_vector(31 downto 0);
+         analysis_s_axi_wstrb   : in  std_logic_vector(3 downto 0);
          analysis_s_axi_wvalid  : in  std_logic;
          analysis_s_axi_bready  : in  std_logic;
-         analysis_s_axi_araddr  : in  std_logic_vector (11 downto 0);
+         analysis_s_axi_araddr  : in  std_logic_vector(11 downto 0);
          analysis_s_axi_arvalid : in  std_logic;
          analysis_s_axi_rready  : in  std_logic;
-         evenimag               : out std_logic_vector (255 downto 0);
-         evenreal               : out std_logic_vector (255 downto 0);
-         oddimag                : out std_logic_vector (255 downto 0);
-         oddreal                : out std_logic_vector (255 downto 0);
-         stream_en              : out std_logic_vector (0 to 0);
-         ifft_opvalid           : out std_logic_vector (0 to 0);
-         dacimag                : out std_logic_vector (255 downto 0);
-         dacreal                : out std_logic_vector (255 downto 0);
+         evenimag               : out std_logic_vector(255 downto 0);
+         evenreal               : out std_logic_vector(255 downto 0);
+         oddimag                : out std_logic_vector(255 downto 0);
+         oddreal                : out std_logic_vector(255 downto 0);
+         stream_en              : out std_logic_vector(0 downto 0);
+         dacimag                : out std_logic_vector(255 downto 0);
+         dacreal                : out std_logic_vector(255 downto 0);
          analysis_s_axi_awready : out std_logic;
          analysis_s_axi_wready  : out std_logic;
-         analysis_s_axi_bresp   : out std_logic_vector (1 downto 0);
+         analysis_s_axi_bresp   : out std_logic_vector(1 downto 0);
          analysis_s_axi_bvalid  : out std_logic;
          analysis_s_axi_arready : out std_logic;
-         analysis_s_axi_rdata   : out std_logic_vector (31 downto 0);
-         analysis_s_axi_rresp   : out std_logic_vector (1 downto 0);
-         analysis_s_axi_rvalid  : out std_logic);
+         analysis_s_axi_rdata   : out std_logic_vector(31 downto 0);
+         analysis_s_axi_rresp   : out std_logic_vector(1 downto 0);
+         analysis_s_axi_rvalid  : out std_logic
+         );
    end component;
-
    constant ANALYSIS_INDEX_C   : natural := 0;
    constant RING_BUFF_INDEX_C  : natural := 1;
    constant DEBUG_INDEX_C      : natural := 2;
@@ -192,7 +191,6 @@ begin
          dacimag                => dspDac(1),
          -- Debug Interface
          stream_en(0)           => stream_en,
-         ifft_opvalid(0)        => ifft_opvalid,
          evenreal               => dspDebugVec(0),
          evenimag               => dspDebugVec(1),
          oddreal                => dspDebugVec(2),
@@ -225,12 +223,12 @@ begin
          debugValid <= stream_en after TPD_G;
          -- Check of even channel
          if (debugAddr(0) = '0') then
-            debugValue(15 downto 0)  <= dspDebugVec(0)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(1)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
+            debugValue(15 downto 0)  <= dspDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;
+            debugValue(31 downto 16) <= dspDebugVec(1)(16*idx+15 downto 16*idx) after TPD_G;
          -- Else odd channel
          else
-            debugValue(15 downto 0)  <= dspDebugVec(2)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(3)(16*(15-idx)+15 downto 16*(15-idx)) after TPD_G;
+            debugValue(15 downto 0)  <= dspDebugVec(2)(16*idx+15 downto 16*idx) after TPD_G;
+            debugValue(31 downto 16) <= dspDebugVec(3)(16*idx+15 downto 16*idx) after TPD_G;
          end if;
       end if;
    end process;

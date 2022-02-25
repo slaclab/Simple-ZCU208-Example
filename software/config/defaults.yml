@@ -10,6 +10,10 @@ Root:
           Ch[:]:
             TrigBurst: 0x0
             ContinuousMode: 0x1
+      AdcSigGen:
+        enable: True
+        Enabled: 0x0
+        Continuous: 0x0
       DacSigGen:
         enable: True
         Enabled: 0x1

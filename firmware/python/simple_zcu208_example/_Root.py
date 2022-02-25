@@ -127,6 +127,12 @@ class Root(pr.Root):
             # Reset the RF Data Converter
             self.XilinxZcu208.RfDataConverter.Reset.set(0x1)
 
+            # Load the waveform data into AdcSigGen
+            if self.XilinxZcu208.Application.AdcSigGen.CsvFilePath.value() != '':
+                self.XilinxZcu208.Application.AdcSigGen.LoadCsvFile()
+            else:
+                self.XilinxZcu208.Application.AdcSigGenLoader.LoadSingleTones()
+
             # Load the waveform data into DacSigGen
             if self.XilinxZcu208.Application.DacSigGen.CsvFilePath.value() != '':
                 self.XilinxZcu208.Application.DacSigGen.LoadCsvFile()
