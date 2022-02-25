@@ -40,20 +40,23 @@ class DacSigGenLoader(pr.Device):
             value   = 200.E+6,
         ))
 
+        phase = [90.0, 0.0, 90.0, 0.0, 90.0, 0.0, 90.0, 0.0]
+
+
         for i in range(8):
 
             self.add(pr.LocalVariable(
                 name    = f'Amplitude[{i}]',
                 typeStr = 'Int16[np]',
                 units   = 'Counts',
-                value   = 30000,
+                value   = 10000,
             ))
 
             self.add(pr.LocalVariable(
                 name    = f'Phase[{i}]',
                 typeStr = 'Float[np]',
                 units   = 'degrees',
-                value   = (i%4)*90.0,
+                value   = phase[i],
             ))
 
         self._smplRate    = 5.0E+9 # Units of Hz
