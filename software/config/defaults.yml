@@ -31,9 +31,11 @@ Root:
           enable: False
           Config[1]: 0
           Config[2]: 4
-          Config[3]: 84
+          Config[3]: 2
           Config[4]: 0
           Config[5]: 0
+          Config[6]: 0xFFFFFFFF
+          Config[7]: 0
         DebugRingBuffer:
           TrigBurst: 0x0
           ContinuousMode: 0x1

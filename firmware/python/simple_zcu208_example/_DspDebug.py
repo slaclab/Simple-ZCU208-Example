@@ -29,3 +29,8 @@ class DspDebug(pr.Device):
             bitSize      = 5,
             mode         = 'RW',
         ))
+
+        @self.command()
+        def toggleReset():
+            self.RstDspCore.set(1)
+            self.RstDspCore.set(0)
