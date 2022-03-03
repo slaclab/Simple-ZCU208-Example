@@ -99,7 +99,17 @@ class Analysis(pr.Device):
             mode         = 'RW',
             description  = """
                 transmitter FFT blocks output streaming.
-                Config[7] select the serial channel number for streaming
+                Selects the serial channel number for streaming
+            """,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'Config[8]',
+            offset       = 0x020,
+            bitSize      = 10,
+            mode         = 'RW',
+            description  = """
+                Transmit filter bank reset delay
             """,
         ))
 

@@ -36,6 +36,7 @@ Root:
           Config[5]: 0
           Config[6]: 0xFFFFFFFF
           Config[7]: 0
+          Config[8]: 10
         DebugRingBuffer:
           TrigBurst: 0x0
           ContinuousMode: 0x1

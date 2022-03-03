@@ -81,7 +81,6 @@ architecture mapping of DspCoreWrapper is
          tevenreal              : out std_logic_vector(255 downto 0);
          toddimag               : out std_logic_vector(255 downto 0);
          toddreal               : out std_logic_vector(255 downto 0);
-         tstream_en             : out std_logic_vector(0 downto 0);
          dacimag                : out std_logic_vector(255 downto 0);
          dacreal                : out std_logic_vector(255 downto 0);
          analysis_s_axi_awready : out std_logic;
