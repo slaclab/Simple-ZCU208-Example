@@ -96,4 +96,5 @@ WNB_imag=reshape(WNA_imag,num_lane,number_channels/num_lane/2);
 WNB_complex=WNB_real+WNB_imag*2^WN_BL;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Baseband excitation
-Tcoef_delay=8;
+Tcoef_delay=12;
+N=4096;
