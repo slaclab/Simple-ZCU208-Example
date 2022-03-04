@@ -27,7 +27,7 @@ class DspDbgProcessor(pr.DataReceiver):
         ris.Slave.__init__(self)
 
         # Configurable variables
-        self._maxSize  = 2**14
+        self._maxSize  = 2**10
         self._smplRate = smplRate
         self._timeBin  = (1.0E+6/self._smplRate) # units of microsec
         self._maxAve   = 4
@@ -161,6 +161,9 @@ class DspDbgProcessor(pr.DataReceiver):
         # Get payload size (int16)
         size = (frame.getPayload() >>1)
 
+        # Check if too big
+        size = self._maxSize<<1 if (size >= self._maxSize<<1) else size
+
         # To access the data we need to create a byte array to hold the data
         fullData = bytearray(size<<1)
 
@@ -179,3 +182,18 @@ class DspDbgProcessor(pr.DataReceiver):
         # Update local variables
         self.Real.set(self._real,write=True)
         self.Imag.set(self._imag,write=True)
+
+        # Calculate the FFT (only using REAL waveoform)
+        freq = np.fft.fft(self._real)/float(self._maxSize)
+        freq = freq[range(self._maxSize>>1)]
+
+        # Prevent warning message when for divide by zero encountered in log10
+        # Checking for inf later to fix this in the display
+        np.seterr(divide = 'ignore')
+
+        # Calculate the average magnitude
+        mag = 20.0*np.log10(np.abs(freq)/32767.0) # Units of dBFS
+        if sum(np.isinf(mag)) == 0:
+            self._mag[self._idx] = mag
+            magnitude = self.running_mean(self._mag)
+            self.Magnitude.set(magnitude,write=True)

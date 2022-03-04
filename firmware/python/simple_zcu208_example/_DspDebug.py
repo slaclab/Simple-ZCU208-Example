@@ -24,7 +24,7 @@ class DspDebug(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'DebugAddr',
+            name         = 'DebugRxAddr',
             offset       = 0x04,
             bitSize      = 5,
             mode         = 'RW',
@@ -34,6 +34,13 @@ class DspDebug(pr.Device):
             name         = 'DebugTxAddr',
             offset       = 0x08,
             bitSize      = 5,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'DebugDelay',
+            offset       = 0x0C,
+            bitSize      = 8,
             mode         = 'RW',
         ))
 

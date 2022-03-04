@@ -20,21 +20,21 @@ from pyrogue.pydm.widgets import PyRogueLineEdit
 import pyrogue as pr
 
 class DspDebugDisplay(PyDMFrame):
-    def __init__(self, parent=None, init_channel=None, dispType='DspDbgProcessor'):
+    def __init__(self, parent=None, init_channel=None, dispType='Rx'):
         PyDMFrame.__init__(self, parent, init_channel)
         self._node    = None
         self.dispType = dispType
-        self.path     = f'{init_channel}.{dispType}'
+        self.path     = f'{init_channel}.DspDbg{dispType}Processor'
         self.dspPath  = f'{init_channel}.XilinxZcu208.Application.DspCoreWrapper'
-        self.color    = ["white","red", "yellow", "dodgerblue"]
-        self.CtrlName = 'Freq Band Control' if (dispType=='DspDbgProcessor') else 'TX FFT Control'
+        self.color    = ["white","red"]
 
     def resetScales(self):
         # Reset the auto-ranging
-        self.realPlot.resetAutoRangeX()
-        self.realPlot.resetAutoRangeY()
-        self.imagPlot.resetAutoRangeX()
-        self.imagPlot.resetAutoRangeY()
+        self.timePlot.resetAutoRangeX()
+        self.timePlot.resetAutoRangeY()
+        self.freqPlot.resetAutoRangeX()
+        self.freqPlot.setMinYRange(-140.0)
+        self.freqPlot.setMaxYRange(0.0)
 
     def connection_changed(self, connected):
         build = (self._node is None) and (self._connected != connected and connected is True)
@@ -50,7 +50,7 @@ class DspDebugDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('Real Channel')
+        gb = QGroupBox( f'Time Domain: {self.color[0]}=REAL, {self.color[1]}=IMAGERY' )
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -59,15 +59,16 @@ class DspDebugDisplay(PyDMFrame):
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
 
-        self.realPlot = PyDMWaveformPlot()
-        self.realPlot.setLabel("bottom", text='Time (microsec)')
-        self.realPlot.setLabel("left",   text='Counts')
-        self.realPlot.addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.Real', color=self.color[0])
-        fl.addWidget(self.realPlot)
+        self.timePlot = PyDMWaveformPlot()
+        self.timePlot.setLabel("bottom", text='Time (microsec)')
+        self.timePlot.setLabel("left",   text='Counts')
+        self.timePlot.addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.Real', color=self.color[0])
+        self.timePlot.addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.Imag', color=self.color[1])
+        fl.addWidget(self.timePlot)
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('Imaginary Channel')
+        gb = QGroupBox('Frequency Domain')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -76,15 +77,18 @@ class DspDebugDisplay(PyDMFrame):
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
 
-        self.imagPlot = PyDMWaveformPlot()
-        self.imagPlot.setLabel("bottom", text='Time (microsec)')
-        self.imagPlot.setLabel("left",   text='Counts')
-        self.imagPlot.addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.Imag', color=self.color[1])
-        fl.addWidget(self.imagPlot)
+        self.freqPlot = PyDMWaveformPlot()
+        self.freqPlot.setLabel("bottom", text='Frequency (kHz)')
+        self.freqPlot.setLabel("left",   text='Amplitude (dBFS)')
+        self.freqPlot.addChannel(x_channel=f'{self.path}.Freq', y_channel=f'{self.path}.Magnitude', color=self.color[0])
+        self.freqPlot.setAutoRangeY(False)
+        self.freqPlot.setMinYRange(-160.0)
+        self.freqPlot.setMaxYRange(0.0)
+        fl.addWidget(self.freqPlot)
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox(self.CtrlName)
+        gb = QGroupBox('Frequency Band Control')
         vb.addWidget(gb)
 
         fl = QHBoxLayout()
@@ -94,13 +98,8 @@ class DspDebugDisplay(PyDMFrame):
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
-        if (self.dispType=='DspDbgProcessor'):
-            w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DebugChSel')
-            w.setRange(0,2047)
-        else:
-            w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DspDebug.DebugTxAddr')
-            w.setRange(0,31)
-
+        w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChSel')
+        w.setRange(0,2047)
         w.setAlignment(Qt.AlignRight)
         w.precision             = 0
         w.showUnits             = False
@@ -111,25 +110,17 @@ class DspDebugDisplay(PyDMFrame):
         w.writeOnPress          = True
         fl.addWidget(w)
 
-        if (self.dispType=='DspDbgProcessor'):
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChFreqMin')
+        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        fl.addWidget(w)
 
-            w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMin')
-            w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            fl.addWidget(w)
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChFreqMean')
+        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        fl.addWidget(w)
 
-            w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMean')
-            w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            fl.addWidget(w)
-
-            w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMax')
-            w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            fl.addWidget(w)
-
-        else:
-            for i in range(3):
-                w = QLabel('')
-                w.setAlignment(Qt.AlignRight)
-                fl.addWidget(w)
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChFreqMax')
+        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        fl.addWidget(w)
 
         rstButton = PyDMPushButton(label="Full Scale")
         rstButton.clicked.connect(self.resetScales)

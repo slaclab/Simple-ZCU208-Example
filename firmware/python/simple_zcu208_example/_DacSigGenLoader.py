@@ -37,7 +37,7 @@ class DacSigGenLoader(pr.Device):
             name    = 'Frequency',
             typeStr = 'Float[np]',
             units   = 'Hz',
-            value   = 200.E+6,
+            value   = 1.0E+9,
         ))
 
         phase = [90.0, 0.0, 90.0, 0.0, 90.0, 0.0, 90.0, 0.0]

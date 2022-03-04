@@ -38,36 +38,73 @@ class DspCoreWrapper(pr.Device):
         ))
 
         self.add(pr.LinkVariable(
-            name         = 'DebugChSel',
+            name         = 'DebugRxChSel',
             mode         = 'RW',
             disp         = '{:d}',
             value        = 0,
-            linkedGet    = lambda: self.DspDebug.DebugAddr.value()+32*self.Analysis.Config[5].value(),
-            linkedSet    = lambda value, write: self.DspDebug.DebugAddr.set(value&0x1F) or self.Analysis.Config[5].set(value>>5),
-            dependencies = [self.DspDebug.DebugAddr,self.Analysis.Config[5]],
+            linkedGet    = lambda: self.DspDebug.DebugRxAddr.value()+32*self.Analysis.Config[5].value(),
+            linkedSet    = lambda value, write: self.DspDebug.DebugRxAddr.set(value&0x1F) or self.Analysis.Config[5].set(value>>5),
+            dependencies = [self.DspDebug.DebugRxAddr,self.Analysis.Config[5]],
         ))
 
         self.add(pr.LinkVariable(
-            name         = 'DebugChFreqMin',
+            name         = 'DebugRxChFreqMin',
             mode         = 'RO',
-            linkedGet    = lambda: f'FreqMin = {self.GetFreqMHz(value=self.DebugChSel.value(),offset=-1.0):.1f} MHz',
-            dependencies = [self.DebugChSel],
+            linkedGet    = lambda: f'FreqMin = {self.GetFreqMHz(value=self.DebugRxChSel.value(),offset=-1.0):.1f} MHz',
+            dependencies = [self.DebugRxChSel],
             hidden       = True,
         ))
 
         self.add(pr.LinkVariable(
-            name         = 'DebugChFreqMean',
+            name         = 'DebugRxChFreqMean',
             mode         = 'RO',
-            linkedGet    = lambda: f'FreqMean = {self.GetFreqMHz(value=self.DebugChSel.value(),offset=0.0):.1f} MHz',
-            dependencies = [self.DebugChSel],
+            linkedGet    = lambda: f'FreqMean = {self.GetFreqMHz(value=self.DebugRxChSel.value(),offset=0.0):.1f} MHz',
+            dependencies = [self.DebugRxChSel],
             hidden       = True,
         ))
 
         self.add(pr.LinkVariable(
-            name         = 'DebugChFreqMax',
+            name         = 'DebugRxChFreqMax',
             mode         = 'RO',
-            linkedGet    = lambda: f'FreqMax = {self.GetFreqMHz(value=self.DebugChSel.value(),offset=1.0):.1f} MHz',
-            dependencies = [self.DebugChSel],
+            linkedGet    = lambda: f'FreqMax = {self.GetFreqMHz(value=self.DebugRxChSel.value(),offset=1.0):.1f} MHz',
+            dependencies = [self.DebugRxChSel],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChSel',
+            mode         = 'RW',
+            disp         = '{:d}',
+            value        = 0,
+            #########################################################################################
+            # Change self.Analysis.Config[5] to the future basebase processing register in the future
+            #########################################################################################
+            linkedGet    = lambda: self.DspDebug.DebugTxAddr.value()+32*self.Analysis.Config[5].value(),
+            linkedSet    = lambda value, write: self.DspDebug.DebugTxAddr.set(value&0x1F) or self.Analysis.Config[5].set(value>>5),
+            dependencies = [self.DspDebug.DebugTxAddr,self.Analysis.Config[5]],
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChFreqMin',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMin = {self.GetFreqMHz(value=self.DebugTxChSel.value(),offset=-1.0):.1f} MHz',
+            dependencies = [self.DebugTxChSel],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChFreqMean',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMean = {self.GetFreqMHz(value=self.DebugTxChSel.value(),offset=0.0):.1f} MHz',
+            dependencies = [self.DebugTxChSel],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChFreqMax',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMax = {self.GetFreqMHz(value=self.DebugTxChSel.value(),offset=1.0):.1f} MHz',
+            dependencies = [self.DebugTxChSel],
             hidden       = True,
         ))
 
