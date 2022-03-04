@@ -61,22 +61,30 @@ class Root(pr.Root):
         # Connect to ring buffer streams (port 10000+512*lane+2*tdest)
         self.ringBufferAdc = [stream.TcpClient(ip,10000+(512*0)+2*(i+0))  for i in range(8)]
         self.ringBufferDac = [stream.TcpClient(ip,10000+(512*0)+2*(i+16)) for i in range(8)]
-        self.ringBufferDbg =  stream.TcpClient(ip,10512) # Starting Stream TcpServer at Port=10512 and Port=10513 for DMA[1][0]
+        self.ringBufferDbg   = stream.TcpClient(ip,10512) # Starting Stream TcpServer at Port=10512 and Port=10513 for DMA[1][0]
+        self.ringBufferTxDbg = stream.TcpClient(ip,10514) # Starting Stream TcpServer at Port=10512 and Port=10513 for DMA[1][0]
 
         # Create stream rate limiters
         self.rateDropAdc = [stream.RateDrop(True,1.0) for i in range(8)]
         self.rateDropDac = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.rateDropDbg =  stream.RateDrop(True,1.0)
+        self.rateDropDbg   = stream.RateDrop(True,1.0)
+        self.rateDropTxDbg = stream.RateDrop(True,1.0)
 
         # Create stream processors
         self.processorAdc = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
         self.processorDac = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]',sampleRate=5.0E+9) for i in range(8)]
-        self.processorDbg = rfsoc.DspDbgProcessor()
+        self.processorDbg   = rfsoc.DspDbgProcessor(name='DspDbgProcessor',  smplRate=(312.5E+6/64.0))
+        self.processorTxDbg = rfsoc.DspDbgProcessor(name='DspTxDbgProcessor',smplRate=(312.5E+6/1.0))
 
         # DSP Debug Ring Buffer Path
         self.ringBufferDbg >> self.dataWriter.getChannel(32)
         self.ringBufferDbg >> self.rateDropDbg >> self.processorDbg
         self.add(self.processorDbg)
+
+        # DSP Debug Ring Buffer Path
+        self.ringBufferTxDbg >> self.dataWriter.getChannel(33)
+        self.ringBufferTxDbg >> self.rateDropTxDbg >> self.processorTxDbg
+        self.add(self.processorTxDbg)
 
         # Connect the rogue stream arrays
         for i in range(8):

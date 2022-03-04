@@ -31,6 +31,7 @@ entity DspCoreDebugReg is
       dspRst          : in  sl;
       rstDspCore      : out sl;
       debugAddr       : out slv(4 downto 0);
+      debugTxAddr     : out slv(4 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -45,6 +46,7 @@ architecture rtl of DspCoreDebugReg is
    type RegType is record
       rstDspCore     : sl;
       debugAddr      : slv(4 downto 0);
+      debugTxAddr    : slv(4 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -52,6 +54,7 @@ architecture rtl of DspCoreDebugReg is
    constant REG_INIT_C : RegType := (
       rstDspCore     => '0',
       debugAddr      => (others => '0'),
+      debugTxAddr    => (others => '0'),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -76,6 +79,7 @@ begin
 
       axiSlaveRegister(axilEp, x"00", 0, v.rstDspCore);
       axiSlaveRegister(axilEp, x"04", 0, v.debugAddr);
+      axiSlaveRegister(axilEp, x"08", 0, v.debugTxAddr);
 
       -- Close the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -117,5 +121,14 @@ begin
          clk     => dspClk,
          dataIn  => r.debugAddr,
          dataOut => debugAddr);
+
+   U_debugTxAddr : entity surf.SynchronizerVector
+      generic map(
+         TPD_G   => TPD_G,
+         WIDTH_G => 5)
+      port map(
+         clk     => dspClk,
+         dataIn  => r.debugTxAddr,
+         dataOut => debugTxAddr);
 
 end architecture rtl;

@@ -96,8 +96,7 @@ architecture mapping of DspCoreWrapper is
    constant ANALYSIS_INDEX_C   : natural := 0;
    constant RING_BUFF_INDEX_C  : natural := 1;
    constant DEBUG_INDEX_C      : natural := 2;
-   constant RATE_LIMIT_INDEX_C : natural := 3;
-   constant NUM_AXIL_MASTERS_C : natural := 4;
+   constant NUM_AXIL_MASTERS_C : natural := 3;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 24, 20);
 
@@ -106,34 +105,20 @@ architecture mapping of DspCoreWrapper is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal axisMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
-   signal axisSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
-
    signal dspReadMaster  : AxiLiteReadMasterType;
    signal dspReadSlave   : AxiLiteReadSlaveType;
    signal dspWriteMaster : AxiLiteWriteMasterType;
    signal dspWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal dspDebugVec : Slv256Array(3 downto 0) := (others => (others => '0'));
-   signal debugValue  : slv(31 downto 0)        := (others => '0');
-   signal debugAddr   : slv(4 downto 0)         := (others => '0');
-   signal debugValid  : sl;
+   signal debugAddr   : slv(4 downto 0) := (others => '0');
+   signal debugTxAddr : slv(4 downto 0) := (others => '0');
 
-   signal dspRstL    : sl := '1';
-   signal rstDspCore : sl := '0';
+   signal dspDebugVec   : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal dspTxDebugVec : Slv256Array(3 downto 0) := (others => (others => '0'));
 
-   signal stream_en    : sl := '0';
-   signal ifft_opvalid : sl := '0';
-
-   attribute dont_touch                 : string;
-   attribute dont_touch of dspDebugVec  : signal is "TRUE";
-   attribute dont_touch of debugValue   : signal is "TRUE";
-   attribute dont_touch of debugAddr    : signal is "TRUE";
-   attribute dont_touch of debugValid   : signal is "TRUE";
-   attribute dont_touch of dspRstL      : signal is "TRUE";
-   attribute dont_touch of rstDspCore   : signal is "TRUE";
-   attribute dont_touch of stream_en    : signal is "TRUE";
-   attribute dont_touch of ifft_opvalid : signal is "TRUE";
+   signal dspRstL       : sl := '1';
+   signal rstDspCore    : sl := '0';
+   signal dspDebugValid : sl := '0';
 
 begin
 
@@ -194,11 +179,16 @@ begin
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
          -- Debug Interface
-         stream_en(0)           => stream_en,
+         stream_en(0)           => dspDebugValid,
          evenreal               => dspDebugVec(0),
          evenimag               => dspDebugVec(1),
          oddreal                => dspDebugVec(2),
          oddimag                => dspDebugVec(3),
+         -- TX Debug Interface
+         tevenreal              => dspTxDebugVec(0),
+         tevenimag              => dspTxDebugVec(1),
+         toddreal               => dspTxDebugVec(2),
+         toddimag               => dspTxDebugVec(3),
          -- AXI-Lite interface
          analysis_aresetn       => dspRstL,
          analysis_s_axi_awaddr  => dspWriteMaster.awaddr(11 downto 0),
@@ -219,69 +209,31 @@ begin
          analysis_s_axi_rvalid  => dspReadSlave.rvalid,
          analysis_s_axi_rready  => dspReadMaster.rready);
 
-   process(debugAddr, dspClk)
-      variable idx : natural;
-   begin
-      idx := conv_integer(debugAddr(4 downto 1));
-      if rising_edge(dspClk) then
-         debugValid <= stream_en after TPD_G;
-         -- Check of even channel
-         if (debugAddr(0) = '0') then
-            debugValue(15 downto 0)  <= dspDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(1)(16*idx+15 downto 16*idx) after TPD_G;
-         -- Else odd channel
-         else
-            debugValue(15 downto 0)  <= dspDebugVec(2)(16*idx+15 downto 16*idx) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(3)(16*idx+15 downto 16*idx) after TPD_G;
-         end if;
-      end if;
-   end process;
-
-   U_AxiStreamRingBuffer : entity surf.AxiStreamRingBuffer
+   U_RingBuffer : entity work.DspCoreRingBuffer
       generic map (
-         TPD_G               => TPD_G,
-         SYNTH_MODE_G        => "xpm",
-         DATA_BYTES_G        => (32/8),
-         RAM_ADDR_WIDTH_G    => 14,
-         AXI_STREAM_CONFIG_G => DMA_AXIS_CONFIG_C)
+         TPD_G            => TPD_G,
+         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RING_BUFF_INDEX_C).baseAddr)
       port map (
-         -- Data to store in ring buffer (dataClk domain)
-         dataClk         => dspClk,
-         dataValid       => debugValid,
-         dataValue       => debugValue,
+         -- DMA Interface (dmaClk domain)
+         dmaClk          => dmaClk,
+         dmaRst          => dmaRst,
+         dmaIbMaster     => dmaIbMaster,
+         dmaIbSlave      => dmaIbSlave,
+         -- Debug Interface (dspClk domain)
+         dspClk          => dspClk,
+         dspRst          => dspRst,
+         debugAddr       => debugAddr,
+         debugTxAddr     => debugTxAddr,
+         dspDebugValid   => dspDebugValid,
+         dspDebugVec     => dspDebugVec,
+         dspTxDebugVec   => dspTxDebugVec,
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
          axilReadMaster  => axilReadMasters(RING_BUFF_INDEX_C),
          axilReadSlave   => axilReadSlaves(RING_BUFF_INDEX_C),
          axilWriteMaster => axilWriteMasters(RING_BUFF_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(RING_BUFF_INDEX_C),
-         -- AXI-Stream Interface (axilClk domain)
-         axisClk         => dmaClk,
-         axisRst         => dmaRst,
-         axisMaster      => axisMaster,
-         axisSlave       => axisSlave);
-
-   U_RateLimiter : entity surf.AxiStreamFrameRateLimiter
-      generic map (
-         TPD_G              => TPD_G,
-         AXIS_CLK_FREQ_G    => DMA_CLK_FREQ_C,
-         DEFAULT_MAX_RATE_G => 2)       -- 2 Hz per channel
-      port map (
-         -- AXI Stream Interface (axisClk domain)
-         axisClk         => dmaClk,
-         axisRst         => dmaRst,
-         sAxisMaster     => axisMaster,
-         sAxisSlave      => axisSlave,
-         mAxisMaster     => dmaIbMaster,
-         mAxisSlave      => dmaIbSlave,
-         -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axilClk,
-         axilRst         => axilRst,
-         axilReadMaster  => axilReadMasters(RATE_LIMIT_INDEX_C),
-         axilReadSlave   => axilReadSlaves(RATE_LIMIT_INDEX_C),
-         axilWriteMaster => axilWriteMasters(RATE_LIMIT_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(RATE_LIMIT_INDEX_C));
+         axilWriteSlave  => axilWriteSlaves(RING_BUFF_INDEX_C));
 
    U_DebugReg : entity work.DspCoreDebugReg
       generic map (
@@ -292,6 +244,7 @@ begin
          dspRst          => dspRst,
          rstDspCore      => rstDspCore,
          debugAddr       => debugAddr,
+         debugTxAddr     => debugTxAddr,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

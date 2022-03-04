@@ -25,21 +25,16 @@ class DspCoreWrapper(pr.Device):
             expand  = True,
         ))
 
-        self.add(axi.AxiStreamRingBuffer(
-            name   = 'DebugRingBuffer',
-            offset = 0x001_00000,
-            # expand   = True,
+        self.add(rfsoc_utility.AppRingBuffer(
+            offset   = 0x001_00000,
+            numAdcCh = 1,
+            numDacCh = 1,
+            expand   = True,
         ))
 
         self.add(rfsoc.DspDebug(
             offset = 0x002_00000,
             expand = True,
-        ))
-
-        self.add(axi.AxiStreamFrameRateLimiter(
-            name   = 'RateLimiter',
-            offset = 0x003_00000,
-            hidden = True,
         ))
 
         self.add(pr.LinkVariable(
@@ -68,7 +63,6 @@ class DspCoreWrapper(pr.Device):
             hidden       = True,
         ))
 
-
         self.add(pr.LinkVariable(
             name         = 'DebugChFreqMax',
             mode         = 'RO',
@@ -77,9 +71,8 @@ class DspCoreWrapper(pr.Device):
             hidden       = True,
         ))
 
-
     def GetFreqMHz(self,value=0,offset=0.0):
         if value<1024:
-            return (float(self.DebugChSel.value())+offset)*5E3/2048.0
+            return (float(value)+offset)*5E3/2048.0
         else:
-            return (float(2047-self.DebugChSel.value())-offset)*-5E3/2048.0
+            return (float(2047-value)-offset)*-5E3/2048.0

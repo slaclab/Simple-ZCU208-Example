@@ -20,6 +20,7 @@ rogue.Version.minVersion('5.13.0')
 class DspDbgProcessor(pr.DataReceiver):
     # Init method must call the parent class init
     def __init__( self,
+            smplRate   = (312.5E+6/64.0), # Units of Hz
             hidden     = True,
         **kwargs):
         pr.Device.__init__(self, hidden=hidden, **kwargs)
@@ -27,9 +28,9 @@ class DspDbgProcessor(pr.DataReceiver):
 
         # Configurable variables
         self._maxSize  = 2**14
-        self._smplRate = (312.5E+6/64.0) # Units of Hz
-        self._timeBin  = (1.0E+6/self._smplRate) # Units of microsec
-        self._maxAve   = 16
+        self._smplRate = smplRate
+        self._timeBin  = (1.0E+6/self._smplRate) # units of microsec
+        self._maxAve   = 4
 
         # Init variables
         self._freqBin  = ((0.5E+3/self._timeBin)/float(self._maxSize>>1)) # Units of kHz

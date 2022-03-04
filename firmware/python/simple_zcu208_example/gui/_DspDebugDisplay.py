@@ -20,12 +20,14 @@ from pyrogue.pydm.widgets import PyRogueLineEdit
 import pyrogue as pr
 
 class DspDebugDisplay(PyDMFrame):
-    def __init__(self, parent=None, init_channel=None):
+    def __init__(self, parent=None, init_channel=None, dispType='DspDbgProcessor'):
         PyDMFrame.__init__(self, parent, init_channel)
-        self._node   = None
-        self.path    = f'{init_channel}.DspDbgProcessor'
-        self.dspPath = f'{init_channel}.XilinxZcu208.Application.DspCoreWrapper'
-        self.color   = ["white","red", "yellow", "dodgerblue"]
+        self._node    = None
+        self.dispType = dispType
+        self.path     = f'{init_channel}.{dispType}'
+        self.dspPath  = f'{init_channel}.XilinxZcu208.Application.DspCoreWrapper'
+        self.color    = ["white","red", "yellow", "dodgerblue"]
+        self.CtrlName = 'Freq Band Control' if (dispType=='DspDbgProcessor') else 'TX FFT Control'
 
     def resetScales(self):
         # Reset the auto-ranging
@@ -82,7 +84,7 @@ class DspDebugDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox( 'Display Controls')
+        gb = QGroupBox(self.CtrlName)
         vb.addWidget(gb)
 
         fl = QHBoxLayout()
@@ -92,9 +94,14 @@ class DspDebugDisplay(PyDMFrame):
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
-        w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DebugChSel')
+        if (self.dispType=='DspDbgProcessor'):
+            w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DebugChSel')
+            w.setRange(0,2047)
+        else:
+            w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DspDebug.DebugTxAddr')
+            w.setRange(0,31)
+
         w.setAlignment(Qt.AlignRight)
-        w.setRange(0,2047)
         w.precision             = 0
         w.showUnits             = False
         w.precisionFromPV       = False
@@ -104,17 +111,25 @@ class DspDebugDisplay(PyDMFrame):
         w.writeOnPress          = True
         fl.addWidget(w)
 
-        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMin')
-        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        fl.addWidget(w)
+        if (self.dispType=='DspDbgProcessor'):
 
-        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMean')
-        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        fl.addWidget(w)
+            w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMin')
+            w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            fl.addWidget(w)
 
-        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMax')
-        w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        fl.addWidget(w)
+            w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMean')
+            w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            fl.addWidget(w)
+
+            w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DebugChFreqMax')
+            w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            fl.addWidget(w)
+
+        else:
+            for i in range(3):
+                w = QLabel('')
+                w.setAlignment(Qt.AlignRight)
+                fl.addWidget(w)
 
         rstButton = PyDMPushButton(label="Full Scale")
         rstButton.clicked.connect(self.resetScales)

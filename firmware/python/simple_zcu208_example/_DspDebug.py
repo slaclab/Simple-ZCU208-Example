@@ -30,6 +30,13 @@ class DspDebug(pr.Device):
             mode         = 'RW',
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'DebugTxAddr',
+            offset       = 0x08,
+            bitSize      = 5,
+            mode         = 'RW',
+        ))
+
         @self.command()
         def toggleReset():
             self.RstDspCore.set(1)
