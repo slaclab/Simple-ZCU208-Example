@@ -42,11 +42,12 @@ entity DspCoreRingBuffer is
       -- Debug Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      debugAddr       : in  slv(4 downto 0);
-      dspDebugValid   : in  sl;
-      dspDebugVec     : in  Slv256Array(3 downto 0);
+      debugRxMarker   : in  sl;
+      debugRxAddr     : in  slv(4 downto 0);
+      debugRxBandVec  : in  Slv256Array(3 downto 0);
+      debugTxMarker   : in  sl;
       debugTxAddr     : in  slv(4 downto 0);
-      dspTxDebugVec   : in  Slv256Array(3 downto 0);
+      debugTxBandVec  : in  Slv256Array(3 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -73,8 +74,10 @@ architecture mapping of DspCoreRingBuffer is
    signal axisMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
    signal axisSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
 
-   signal debugValid   : sl               := '0';
-   signal debugValue   : slv(31 downto 0) := (others => '0');
+   signal debugRxValid : sl               := '0';
+   signal debugRxValue : slv(31 downto 0) := (others => '0');
+
+   signal debugTxValid : sl               := '0';
    signal debugTxValue : slv(31 downto 0) := (others => '0');
 
 begin
@@ -97,20 +100,20 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   process(debugAddr, dspClk)
+   process(debugRxAddr, dspClk)
       variable idx : natural;
    begin
-      idx := conv_integer(debugAddr(4 downto 1));
+      idx := conv_integer(debugRxAddr(4 downto 1));
       if rising_edge(dspClk) then
-         debugValid <= dspDebugValid after TPD_G;
+         debugRxValid <= debugRxMarker after TPD_G;
          -- Check of even channel
-         if (debugAddr(0) = '0') then
-            debugValue(15 downto 0)  <= dspDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(1)(16*idx+15 downto 16*idx) after TPD_G;
+         if (debugRxAddr(0) = '0') then
+            debugRxValue(15 downto 0)  <= debugRxBandVec(0)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(31 downto 16) <= debugRxBandVec(1)(16*idx+15 downto 16*idx) after TPD_G;
          -- Else odd channel
          else
-            debugValue(15 downto 0)  <= dspDebugVec(2)(16*idx+15 downto 16*idx) after TPD_G;
-            debugValue(31 downto 16) <= dspDebugVec(3)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(15 downto 0)  <= debugRxBandVec(2)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(31 downto 16) <= debugRxBandVec(3)(16*idx+15 downto 16*idx) after TPD_G;
          end if;
       end if;
    end process;
@@ -120,30 +123,31 @@ begin
    begin
       idx := conv_integer(debugTxAddr(4 downto 1));
       if rising_edge(dspClk) then
+         debugTxValid <= debugTxMarker after TPD_G;
          -- Check of even channel
          if (debugTxAddr(0) = '0') then
-            debugTxValue(15 downto 0)  <= dspTxDebugVec(0)(16*idx+15 downto 16*idx) after TPD_G;
-            debugTxValue(31 downto 16) <= dspTxDebugVec(1)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(15 downto 0)  <= debugTxBandVec(0)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(31 downto 16) <= debugTxBandVec(1)(16*idx+15 downto 16*idx) after TPD_G;
          -- Else odd channel
          else
-            debugTxValue(15 downto 0)  <= dspTxDebugVec(2)(16*idx+15 downto 16*idx) after TPD_G;
-            debugTxValue(31 downto 16) <= dspTxDebugVec(3)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(15 downto 0)  <= debugTxBandVec(2)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(31 downto 16) <= debugTxBandVec(3)(16*idx+15 downto 16*idx) after TPD_G;
          end if;
       end if;
    end process;
 
-   U_dspDebug : entity surf.AxiStreamRingBuffer
+   U_RxRingBuffer : entity surf.AxiStreamRingBuffer
       generic map (
          TPD_G               => TPD_G,
          SYNTH_MODE_G        => "xpm",
          DATA_BYTES_G        => (32/8),
-         RAM_ADDR_WIDTH_G    => 14,
+         RAM_ADDR_WIDTH_G    => 10,
          AXI_STREAM_CONFIG_G => DMA_AXIS_CONFIG_C)
       port map (
          -- Data to store in ring buffer (dataClk domain)
          dataClk         => dspClk,
-         dataValid       => debugValid,
-         dataValue       => debugValue,
+         dataValid       => debugRxValid,
+         dataValue       => debugRxValue,
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -157,16 +161,17 @@ begin
          axisMaster      => axisMasters(0),
          axisSlave       => axisSlaves(0));
 
-   U_dspTxDebug : entity surf.AxiStreamRingBuffer
+   U_TxRingBuffer : entity surf.AxiStreamRingBuffer
       generic map (
          TPD_G               => TPD_G,
          SYNTH_MODE_G        => "xpm",
          DATA_BYTES_G        => (32/8),
-         RAM_ADDR_WIDTH_G    => 14,
+         RAM_ADDR_WIDTH_G    => 10,
          AXI_STREAM_CONFIG_G => DMA_AXIS_CONFIG_C)
       port map (
          -- Data to store in ring buffer (dataClk domain)
          dataClk         => dspClk,
+         dataValid       => debugTxValid,
          dataValue       => debugTxValue,
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,

@@ -110,22 +110,34 @@ architecture mapping of DspCoreWrapper is
    signal dspWriteMaster : AxiLiteWriteMasterType;
    signal dspWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal debugAddr   : slv(4 downto 0) := (others => '0');
+   signal debugRxAddr : slv(4 downto 0) := (others => '0');
    signal debugTxAddr : slv(4 downto 0) := (others => '0');
+   signal debugDelay  : slv(7 downto 0) := (others => '0');
 
-   signal dspDebugVec   : Slv256Array(3 downto 0) := (others => (others => '0'));
-   signal dspTxDebugVec : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal startRxMarker : sl                      := '0';
+   signal debugRXMarker : sl                      := '0';
+   signal freqRxBandVec : Slv256Array(3 downto 0) := (others => (others => '0'));
 
-   signal dspRstL       : sl := '1';
-   signal rstDspCore    : sl := '0';
-   signal dspDebugValid : sl := '0';
+   signal startTxMarker : sl                      := '0';
+   signal debugTXMarker : sl                      := '0';
+   signal freqTxBandVec : Slv256Array(3 downto 0) := (others => (others => '0'));
+
+   signal dspRstL    : sl := '1';
+   signal rstDspCore : sl := '0';
 
 begin
 
-   dspRstL <= not(dspRst);
-
    -- Loopback unused channels
    dspDac(7 downto 2) <= dspAdc(7 downto 2);
+
+   U_RstPipeline : entity surf.RstPipeline
+      generic map(
+         TPD_G     => TPD_G,
+         INV_RST_G => true)             -- Invert RESET
+      port map(
+         clk    => dspClk,
+         rstIn  => dspRst,
+         rstOut => dspRstL);
 
    U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
@@ -178,17 +190,31 @@ begin
          -- DAC Interface
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
-         -- Debug Interface
-         stream_en(0)           => dspDebugValid,
-         evenreal               => dspDebugVec(0),
-         evenimag               => dspDebugVec(1),
-         oddreal                => dspDebugVec(2),
-         oddimag                => dspDebugVec(3),
-         -- TX Debug Interface
-         tevenreal              => dspTxDebugVec(0),
-         tevenimag              => dspTxDebugVec(1),
-         toddreal               => dspTxDebugVec(2),
-         toddimag               => dspTxDebugVec(3),
+
+         -- -- Freq Band Outbound (RX) Interface
+         -- stream_en_out(0)       => startRxMarker,  -- CH=0
+         -- debug_mark_out(0)      => debugRXMarker,  -- CH=programmable
+         -- evenreal_out           => freqRxBandVec(0),
+         -- evenimag_out           => freqRxBandVec(1),
+         -- oddreal_out            => freqRxBandVec(2),
+         -- oddimag_out            => freqRxBandVec(3),
+
+         stream_en(0)          => debugRXMarker,
+         evenreal           => freqRxBandVec(0),
+         evenimag           => freqRxBandVec(1),
+         oddreal            => freqRxBandVec(2),
+         oddimag            => freqRxBandVec(3),
+
+
+
+
+         -- -- Freq Band Inbound (TX) Interface
+         -- stream_en_in(0)        => startTxMarker,
+         -- evenreal_in            => freqTxBandVec(0),
+         -- evenimag_in            => freqTxBandVec(1),
+         -- oddreal_in             => freqTxBandVec(2),
+         -- oddimag_in             => freqTxBandVec(3),
+
          -- AXI-Lite interface
          analysis_aresetn       => dspRstL,
          analysis_s_axi_awaddr  => dspWriteMaster.awaddr(11 downto 0),
@@ -209,6 +235,40 @@ begin
          analysis_s_axi_rvalid  => dspReadSlave.rvalid,
          analysis_s_axi_rready  => dspReadMaster.rready);
 
+   GEN_VEC :
+   for i in 3 downto 0 generate
+      U_Delay : entity surf.SlvDelayRam
+         generic map (
+            TPD_G    => TPD_G,
+            DO_REG_G => true,
+            DELAY_G  => 255,
+            WIDTH_G  => 256)
+         port map (
+            clk      => dmaClk,
+            rst      => rstDspCore,
+            maxCount => debugDelay,
+            din      => freqRxBandVec(i),
+            dout     => freqTxBandVec(i));
+   end generate GEN_VEC;
+
+   U_Delay : entity surf.SlvDelayRam
+      generic map (
+         TPD_G    => TPD_G,
+         DO_REG_G => true,
+         DELAY_G  => 255,
+         WIDTH_G  => 2)
+      port map (
+         clk      => dmaClk,
+         rst      => rstDspCore,
+         maxCount => debugDelay,
+         din(0)   => startRxMarker,
+         din(1)   => debugRXMarker,
+         dout(0)  => startTxMarker,
+         dout(1)  => debugTXMarker);
+
+   -- Remove this later
+   startRxMarker <= debugRXMarker;
+
    U_RingBuffer : entity work.DspCoreRingBuffer
       generic map (
          TPD_G            => TPD_G,
@@ -222,11 +282,12 @@ begin
          -- Debug Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         debugAddr       => debugAddr,
+         debugRXMarker   => debugRxMarker,
+         debugRxAddr     => debugRxAddr,
+         debugRxBandVec  => freqRxBandVec,
+         debugTXMarker   => debugTxMarker,
          debugTxAddr     => debugTxAddr,
-         dspDebugValid   => dspDebugValid,
-         dspDebugVec     => dspDebugVec,
-         dspTxDebugVec   => dspTxDebugVec,
+         debugTxBandVec  => freqTxBandVec,
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -243,8 +304,9 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          rstDspCore      => rstDspCore,
-         debugAddr       => debugAddr,
+         debugRxAddr     => debugRxAddr,
          debugTxAddr     => debugTxAddr,
+         debugDelay      => debugDelay,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

@@ -10,11 +10,17 @@ Root:
             ContinuousMode: 0x1
       AdcSigGen:
         enable: True
+
+        # Enabled: 0x0
         Enabled: 0x1
+
         Continuous: 0x1
       DacSigGen:
         enable: True
+
         Enabled: 0x0
+        # Enabled: 0x1
+
         Continuous: 0x1
         ######################################################################
         # CsvFilePath: 'config/DacSigGen/1tone_19_531250MHz_all_channels.csv'
