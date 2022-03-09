@@ -23,3 +23,6 @@ if { [get_ips analysis_0] eq ""  } {
    # Update target language
    set_property target_language Verilog [current_project]
 }
+
+# Updating the impl_1 strategy
+set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]

@@ -26,6 +26,8 @@ class DspDbgProcessor(pr.DataReceiver):
         pr.Device.__init__(self, hidden=hidden, **kwargs)
         ris.Slave.__init__(self)
 
+        self._enableOnStart = True
+
         # Configurable variables
         self._maxSize  = 2**10
         self._smplRate = smplRate

@@ -61,11 +61,11 @@ architecture mapping of DspCoreWrapper is
          adc_real               : in  std_logic_vector(255 downto 0);
          reset                  : in  std_logic_vector(0 downto 0);
          valid_in               : in  std_logic_vector(0 downto 0);
-         stream_en_in           : in  std_logic_vector(0 downto 0);
-         evenrea_in             : in  std_logic_vector(255 downto 0);
          evenimag_in            : in  std_logic_vector(255 downto 0);
+         evenrea_in             : in  std_logic_vector(255 downto 0);
          oddimag_in             : in  std_logic_vector(255 downto 0);
          oddreal_in             : in  std_logic_vector(255 downto 0);
+         stream_en_in           : in  std_logic_vector(0 downto 0);
          clk                    : in  std_logic;
          analysis_aresetn       : in  std_logic;
          analysis_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
@@ -77,12 +77,12 @@ architecture mapping of DspCoreWrapper is
          analysis_s_axi_araddr  : in  std_logic_vector(11 downto 0);
          analysis_s_axi_arvalid : in  std_logic;
          analysis_s_axi_rready  : in  std_logic;
+         debug_en_out           : out std_logic_vector(0 downto 0);
          evenimag_out           : out std_logic_vector(255 downto 0);
          evenreal_out           : out std_logic_vector(255 downto 0);
          oddimag_out            : out std_logic_vector(255 downto 0);
          oddreal_out            : out std_logic_vector(255 downto 0);
          stream_en_out          : out std_logic_vector(0 downto 0);
-         debug_en_out           : out std_logic_vector(0 downto 0);
          tevenimag              : out std_logic_vector(255 downto 0);
          tevenreal              : out std_logic_vector(255 downto 0);
          toddimag               : out std_logic_vector(255 downto 0);
@@ -117,9 +117,9 @@ architecture mapping of DspCoreWrapper is
    signal dspWriteMaster : AxiLiteWriteMasterType;
    signal dspWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal debugRxAddr : slv(4 downto 0) := (others => '0');
-   signal debugTxAddr : slv(4 downto 0) := (others => '0');
-   signal debugDelay  : slv(7 downto 0) := (others => '0');
+   signal debugRxAddr : slv(10 downto 0) := (others => '0');
+   signal debugTxAddr : slv(10 downto 0) := (others => '0');
+   signal debugDelay  : slv(3 downto 0)  := (others => '0');
 
    signal startRxMarker : sl                      := '0';
    signal debugRXMarker : sl                      := '0';
@@ -129,17 +129,16 @@ architecture mapping of DspCoreWrapper is
    signal debugTXMarker : sl                      := '0';
    signal freqTxBandVec : Slv256Array(3 downto 0) := (others => (others => '0'));
 
-   signal dspRstL    : sl := '1';
-   signal rstDspCore : sl := '0';
-   
-   signal rxMarkerSel : sl              := '0';
-   signal rxMarker    : slv(1 downto 0) := (others => '0');
+   signal dspRstL     : sl := '1';
+   signal rstDspCore  : sl := '0';
+   signal debugRxTest : sl := '0';
 
    attribute dont_touch                  : string;
    attribute dont_touch of startRxMarker : signal is "TRUE";
    attribute dont_touch of debugRXMarker : signal is "TRUE";
    attribute dont_touch of startTxMarker : signal is "TRUE";
    attribute dont_touch of debugTXMarker : signal is "TRUE";
+   attribute dont_touch of debugRxTest   : signal is "TRUE";
 
 begin
 
@@ -207,15 +206,15 @@ begin
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
          -- Freq Band Outbound (RX) Interface
-         stream_en_out(0)       => rxMarker(0),  -- CH=0
-         debug_en_out(0)        => rxMarker(1),  -- CH=programmable
+         stream_en_out(0)       => startRxMarker,     -- CH=0
+         debug_en_out(0)        => debugRXMarker,     -- CH=programmable
          evenreal_out           => freqRxBandVec(0),
          evenimag_out           => freqRxBandVec(1),
          oddreal_out            => freqRxBandVec(2),
          oddimag_out            => freqRxBandVec(3),
          -- Freq Band Inbound (TX) Interface
          stream_en_in(0)        => startTxMarker,
-         evenrea_in             => freqTxBandVec(0),
+         evenrea_in             => freqTxBandVec(0),  -- Lili misspelled this port. Should be "evenrea_in"
          evenimag_in            => freqTxBandVec(1),
          oddreal_in             => freqTxBandVec(2),
          oddimag_in             => freqTxBandVec(3),
@@ -239,41 +238,43 @@ begin
          analysis_s_axi_rvalid  => dspReadSlave.rvalid,
          analysis_s_axi_rready  => dspReadMaster.rready);
 
-   startRxMarker <= rxMarker(0) when (rxMarkerSel='0') else rxMarker(1);
-   debugRXMarker <= rxMarker(1) when (rxMarkerSel='0') else rxMarker(0);
-
-   GEN_VEC :
-   for i in 3 downto 0 generate
-      U_Delay : entity surf.SlvDelay
-         generic map (
-            TPD_G        => TPD_G,
-            SRL_EN_G     => false,
-            REG_OUTPUT_G => true,
-            DELAY_G      => 255,
-            WIDTH_G      => 256)
-         port map (
-            clk   => dmaClk,
-            rst   => rstDspCore,
-            delay => debugDelay,
-            din   => freqRxBandVec(i),
-            dout  => freqTxBandVec(i));
-   end generate GEN_VEC;
-
-   U_Delay : entity surf.SlvDelay
+   U_Loopback : entity surf.SlvDelay
       generic map (
          TPD_G        => TPD_G,
          SRL_EN_G     => false,
-         REG_OUTPUT_G => true,
-         DELAY_G      => 255,
-         WIDTH_G      => 2)
+         REG_OUTPUT_G => false,
+         DELAY_G      => 15,
+         WIDTH_G      => (4*256+2))
       port map (
-         clk     => dmaClk,
+         clk                          => dspClk,
+         rst                          => rstDspCore,
+         delay                        => debugDelay,
+         din(256*0+255 downto 256*0)  => freqRxBandVec(0),
+         din(256*1+255 downto 256*1)  => freqRxBandVec(1),
+         din(256*2+255 downto 256*2)  => freqRxBandVec(2),
+         din(256*3+255 downto 256*3)  => freqRxBandVec(3),
+         din(4*256+0)                 => startRxMarker,
+         din(4*256+1)                 => debugRXMarker,
+         dout(256*0+255 downto 256*0) => freqTxBandVec(0),
+         dout(256*1+255 downto 256*1) => freqTxBandVec(1),
+         dout(256*2+255 downto 256*2) => freqTxBandVec(2),
+         dout(256*3+255 downto 256*3) => freqTxBandVec(3),
+         dout(4*256+0)                => startTxMarker,
+         dout(4*256+1)                => debugTXMarker);
+
+   U_Test : entity surf.SlvDelay
+      generic map (
+         TPD_G        => TPD_G,
+         SRL_EN_G     => false,
+         REG_OUTPUT_G => false,
+         DELAY_G      => 63,
+         WIDTH_G      => 1)
+      port map (
+         clk     => dspClk,
          rst     => rstDspCore,
-         delay   => debugDelay,
+         delay   => debugRxAddr(10 downto 5),
          din(0)  => startRxMarker,
-         din(1)  => debugRXMarker,
-         dout(0) => startTxMarker,
-         dout(1) => debugTXMarker);
+         dout(0) => debugRxTest);
 
    U_RingBuffer : entity work.DspCoreRingBuffer
       generic map (
@@ -289,10 +290,10 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          debugRXMarker   => debugRxMarker,
-         debugRxAddr     => debugRxAddr,
+         debugRxAddr     => debugRxAddr(4 downto 0),
          debugRxBandVec  => freqRxBandVec,
          debugTXMarker   => debugTxMarker,
-         debugTxAddr     => debugTxAddr,
+         debugTxAddr     => debugTxAddr(4 downto 0),
          debugTxBandVec  => freqTxBandVec,
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,
@@ -313,7 +314,6 @@ begin
          debugRxAddr     => debugRxAddr,
          debugTxAddr     => debugTxAddr,
          debugDelay      => debugDelay,
-         rxMarkerSel     => rxMarkerSel,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

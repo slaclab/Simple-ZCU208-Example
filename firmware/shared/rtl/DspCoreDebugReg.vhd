@@ -30,10 +30,9 @@ entity DspCoreDebugReg is
       dspClk          : in  sl;
       dspRst          : in  sl;
       rstDspCore      : out sl;
-      debugRxAddr     : out slv(4 downto 0);
-      debugTxAddr     : out slv(4 downto 0);
-      debugDelay      : out slv(7 downto 0);
-      rxMarkerSel     : out sl;
+      debugRxAddr     : out slv(10 downto 0);
+      debugTxAddr     : out slv(10 downto 0);
+      debugDelay      : out slv(3 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -48,9 +47,9 @@ architecture rtl of DspCoreDebugReg is
    type RegType is record
       rxMarkerSel    : sl;
       rstDspCore     : sl;
-      debugRxAddr    : slv(4 downto 0);
-      debugTxAddr    : slv(4 downto 0);
-      debugDelay     : slv(7 downto 0);
+      debugRxAddr    : slv(10 downto 0);
+      debugTxAddr    : slv(10 downto 0);
+      debugDelay     : slv(3 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -60,7 +59,7 @@ architecture rtl of DspCoreDebugReg is
       rstDspCore     => '0',
       debugRxAddr    => (others => '0'),
       debugTxAddr    => (others => '0'),
-      debugDelay     => (others => '0'),
+      debugDelay     => x"8",
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -89,7 +88,6 @@ begin
       axiSlaveRegister(axilEp, x"04", 0, v.debugRxAddr);
       axiSlaveRegister(axilEp, x"08", 0, v.debugTxAddr);
       axiSlaveRegister(axilEp, x"0C", 0, v.debugDelay);
-      axiSlaveRegister(axilEp, x"10", 0, v.rxMarkerSel);
 
       -- Close the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -135,7 +133,7 @@ begin
    U_debugRxAddr : entity surf.SynchronizerVector
       generic map(
          TPD_G   => TPD_G,
-         WIDTH_G => 5)
+         WIDTH_G => 11)
       port map(
          clk     => dspClk,
          dataIn  => r.debugRxAddr,
@@ -144,7 +142,7 @@ begin
    U_debugTxAddr : entity surf.SynchronizerVector
       generic map(
          TPD_G   => TPD_G,
-         WIDTH_G => 5)
+         WIDTH_G => 11)
       port map(
          clk     => dspClk,
          dataIn  => r.debugTxAddr,
@@ -153,18 +151,10 @@ begin
    U_debugDelay : entity surf.SynchronizerVector
       generic map(
          TPD_G   => TPD_G,
-         WIDTH_G => 8)
+         WIDTH_G => 4)
       port map(
          clk     => dspClk,
          dataIn  => r.debugDelay,
          dataOut => debugDelay);
-
-   U_rxMarkerSel : entity surf.Synchronizer
-      generic map(
-         TPD_G => TPD_G)
-      port map(
-         clk     => dspClk,
-         dataIn  => r.rxMarkerSel,
-         dataOut => rxMarkerSel);
 
 end architecture rtl;
