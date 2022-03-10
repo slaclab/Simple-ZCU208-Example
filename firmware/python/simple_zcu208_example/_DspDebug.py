@@ -26,22 +26,14 @@ class DspDebug(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'DebugRxAddr',
             offset       = 0x04,
-            bitSize      = 5,
-            mode         = 'RW',
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'DebugTest',
-            offset       = 0x04,
-            bitSize      = 6,
-            bitOffset    = 5,
+            bitSize      = 11,
             mode         = 'RW',
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'DebugTxAddr',
             offset       = 0x08,
-            bitSize      = 5,
+            bitSize      = 11,
             mode         = 'RW',
         ))
 
@@ -56,3 +48,57 @@ class DspDebug(pr.Device):
         def toggleReset():
             self.RstDspCore.set(1)
             self.RstDspCore.set(0)
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugRxChFreqMin',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMin = {self.GetFreqMHz(value=self.DebugRxAddr.value(),offset=-1.0):.1f} MHz',
+            dependencies = [self.DebugRxAddr],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugRxChFreqMean',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMean = {self.GetFreqMHz(value=self.DebugRxAddr.value(),offset=0.0):.1f} MHz',
+            dependencies = [self.DebugRxAddr],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugRxChFreqMax',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMax = {self.GetFreqMHz(value=self.DebugRxAddr.value(),offset=1.0):.1f} MHz',
+            dependencies = [self.DebugRxAddr],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChFreqMin',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMin = {self.GetFreqMHz(value=self.DebugTxAddr.value(),offset=-1.0):.1f} MHz',
+            dependencies = [self.DebugTxAddr],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChFreqMean',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMean = {self.GetFreqMHz(value=self.DebugTxAddr.value(),offset=0.0):.1f} MHz',
+            dependencies = [self.DebugTxAddr],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'DebugTxChFreqMax',
+            mode         = 'RO',
+            linkedGet    = lambda: f'FreqMax = {self.GetFreqMHz(value=self.DebugTxAddr.value(),offset=1.0):.1f} MHz',
+            dependencies = [self.DebugTxAddr],
+            hidden       = True,
+        ))
+
+    def GetFreqMHz(self,value=0,offset=0.0):
+        if value<1024:
+            return (float(value)+offset)*5E3/2048.0
+        else:
+            return (float(2047-value)-offset)*-5E3/2048.0

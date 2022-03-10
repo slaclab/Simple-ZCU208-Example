@@ -42,12 +42,13 @@ entity DspCoreRingBuffer is
       -- Debug Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      debugRxMarker   : in  sl;
-      debugRxAddr     : in  slv(4 downto 0);
-      debugRxBandVec  : in  Slv256Array(3 downto 0);
-      debugTxMarker   : in  sl;
-      debugTxAddr     : in  slv(4 downto 0);
-      debugTxBandVec  : in  Slv256Array(3 downto 0);
+      rstDspCore      : in  sl;
+      startRxMarker   : in  sl;
+      debugRxAddr     : in  slv(10 downto 0);
+      freqRxBandVec   : in  Slv256Array(3 downto 0);
+      startTxMarker   : in  sl;
+      debugTxAddr     : in  slv(10 downto 0);
+      freqTxBandVec   : in  Slv256Array(3 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -74,11 +75,16 @@ architecture mapping of DspCoreRingBuffer is
    signal axisMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
    signal axisSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
 
-   signal debugRxValid : sl               := '0';
-   signal debugRxValue : slv(31 downto 0) := (others => '0');
+   signal debugRxMarker : sl               := '0';
+   signal debugRxValid  : sl               := '0';
+   signal debugRxValue  : slv(31 downto 0) := (others => '0');
 
-   signal debugTxValid : sl               := '0';
-   signal debugTxValue : slv(31 downto 0) := (others => '0');
+   signal debugTxMarker : sl               := '0';
+   signal debugTxValid  : sl               := '0';
+   signal debugTxValue  : slv(31 downto 0) := (others => '0');
+
+   signal debugRxBandDly : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal debugTxBandDly : Slv256Array(3 downto 0) := (others => (others => '0'));
 
 begin
 
@@ -100,6 +106,44 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
+   U_debugRxMarker : entity surf.SlvDelay
+      generic map (
+         TPD_G        => TPD_G,
+         SRL_EN_G     => false,
+         REG_OUTPUT_G => false,
+         DELAY_G      => 63,
+         WIDTH_G      => 1)
+      port map (
+         clk     => dspClk,
+         rst     => rstDspCore,
+         delay   => debugRxAddr(10 downto 5),
+         din(0)  => startRxMarker,
+         dout(0) => debugRxMarker);
+
+   U_debugTxMarker : entity surf.SlvDelay
+      generic map (
+         TPD_G        => TPD_G,
+         SRL_EN_G     => false,
+         REG_OUTPUT_G => false,
+         DELAY_G      => 63,
+         WIDTH_G      => 1)
+      port map (
+         clk     => dspClk,
+         rst     => rstDspCore,
+         delay   => debugTxAddr(10 downto 5),
+         din(0)  => startTxMarker,
+         dout(0) => debugTxMarker);
+
+   process(dspClk)
+      variable idx : natural;
+   begin
+      if rising_edge(dspClk) then
+         -- Add 1 cycle delay to phase align with debug markers
+         debugRxBandDly <= freqRxBandVec after TPD_G;
+         debugTxBandDly <= freqTxBandVec after TPD_G;
+      end if;
+   end process;
+
    process(debugRxAddr, dspClk)
       variable idx : natural;
    begin
@@ -108,12 +152,12 @@ begin
          debugRxValid <= debugRxMarker after TPD_G;
          -- Check of even channel
          if (debugRxAddr(0) = '0') then
-            debugRxValue(15 downto 0)  <= debugRxBandVec(0)(16*idx+15 downto 16*idx) after TPD_G;
-            debugRxValue(31 downto 16) <= debugRxBandVec(1)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(15 downto 0)  <= debugRxBandDly(0)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(31 downto 16) <= debugRxBandDly(1)(16*idx+15 downto 16*idx) after TPD_G;
          -- Else odd channel
          else
-            debugRxValue(15 downto 0)  <= debugRxBandVec(2)(16*idx+15 downto 16*idx) after TPD_G;
-            debugRxValue(31 downto 16) <= debugRxBandVec(3)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(15 downto 0)  <= debugRxBandDly(2)(16*idx+15 downto 16*idx) after TPD_G;
+            debugRxValue(31 downto 16) <= debugRxBandDly(3)(16*idx+15 downto 16*idx) after TPD_G;
          end if;
       end if;
    end process;
@@ -126,12 +170,12 @@ begin
          debugTxValid <= debugTxMarker after TPD_G;
          -- Check of even channel
          if (debugTxAddr(0) = '0') then
-            debugTxValue(15 downto 0)  <= debugTxBandVec(0)(16*idx+15 downto 16*idx) after TPD_G;
-            debugTxValue(31 downto 16) <= debugTxBandVec(1)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(15 downto 0)  <= debugTxBandDly(0)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(31 downto 16) <= debugTxBandDly(1)(16*idx+15 downto 16*idx) after TPD_G;
          -- Else odd channel
          else
-            debugTxValue(15 downto 0)  <= debugTxBandVec(2)(16*idx+15 downto 16*idx) after TPD_G;
-            debugTxValue(31 downto 16) <= debugTxBandVec(3)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(15 downto 0)  <= debugTxBandDly(2)(16*idx+15 downto 16*idx) after TPD_G;
+            debugTxValue(31 downto 16) <= debugTxBandDly(3)(16*idx+15 downto 16*idx) after TPD_G;
          end if;
       end if;
    end process;

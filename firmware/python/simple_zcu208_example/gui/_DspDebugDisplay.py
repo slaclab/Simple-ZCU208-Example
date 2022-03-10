@@ -98,7 +98,7 @@ class DspDebugDisplay(PyDMFrame):
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
-        w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChSel')
+        w = PyDMSpinbox(parent=None, init_channel=f'{self.dspPath}.DspDebug.Debug{self.dispType}Addr')
         w.setRange(0,2047)
         w.setAlignment(Qt.AlignRight)
         w.precision             = 0
@@ -110,15 +110,15 @@ class DspDebugDisplay(PyDMFrame):
         w.writeOnPress          = True
         fl.addWidget(w)
 
-        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChFreqMin')
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DspDebug.Debug{self.dispType}ChFreqMin')
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
-        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChFreqMean')
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DspDebug.Debug{self.dispType}ChFreqMean')
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 
-        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.Debug{self.dispType}ChFreqMax')
+        w = PyDMLabel(parent=None, init_channel=f'{self.dspPath}.DspDebug.Debug{self.dispType}ChFreqMax')
         w.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         fl.addWidget(w)
 

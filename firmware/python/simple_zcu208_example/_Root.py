@@ -150,8 +150,8 @@ class Root(pr.Root):
             dspCore.DspDebug.RstDspCore.set(0x0)
 
             # Update the default debug channel select
-            dspCore.DebugRxChSel.set(82)
-            dspCore.DebugTxChSel.set(82)
+            dspCore.DspDebug.DebugRxAddr.set(82)
+            dspCore.DspDebug.DebugTxAddr.set(82)
 
             # Update all SW remote registers
             self.ReadAll()

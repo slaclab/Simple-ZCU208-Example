@@ -122,23 +122,14 @@ architecture mapping of DspCoreWrapper is
    signal debugDelay  : slv(3 downto 0)  := (others => '0');
 
    signal startRxMarker : sl                      := '0';
-   signal debugRXMarker : sl                      := '0';
    signal freqRxBandVec : Slv256Array(3 downto 0) := (others => (others => '0'));
 
    signal startTxMarker : sl                      := '0';
-   signal debugTXMarker : sl                      := '0';
    signal freqTxBandVec : Slv256Array(3 downto 0) := (others => (others => '0'));
 
    signal dspRstL     : sl := '1';
    signal rstDspCore  : sl := '0';
    signal debugRxTest : sl := '0';
-
-   attribute dont_touch                  : string;
-   attribute dont_touch of startRxMarker : signal is "TRUE";
-   attribute dont_touch of debugRXMarker : signal is "TRUE";
-   attribute dont_touch of startTxMarker : signal is "TRUE";
-   attribute dont_touch of debugTXMarker : signal is "TRUE";
-   attribute dont_touch of debugRxTest   : signal is "TRUE";
 
 begin
 
@@ -206,14 +197,13 @@ begin
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
          -- Freq Band Outbound (RX) Interface
-         stream_en_out(0)       => startRxMarker,     -- CH=0
-         debug_en_out(0)        => debugRXMarker,     -- CH=programmable
+         stream_en_out(0)       => startRxMarker,     -- CH=0 when HIGH
          evenreal_out           => freqRxBandVec(0),
          evenimag_out           => freqRxBandVec(1),
          oddreal_out            => freqRxBandVec(2),
          oddimag_out            => freqRxBandVec(3),
          -- Freq Band Inbound (TX) Interface
-         stream_en_in(0)        => startTxMarker,
+         stream_en_in(0)        => startTxMarker,     -- CH=0 when HIGH
          evenrea_in             => freqTxBandVec(0),  -- Lili misspelled this port. Should be "evenrea_in"
          evenimag_in            => freqTxBandVec(1),
          oddreal_in             => freqTxBandVec(2),
@@ -244,7 +234,7 @@ begin
          SRL_EN_G     => false,
          REG_OUTPUT_G => false,
          DELAY_G      => 15,
-         WIDTH_G      => (4*256+2))
+         WIDTH_G      => (4*256+1))
       port map (
          clk                          => dspClk,
          rst                          => rstDspCore,
@@ -254,27 +244,11 @@ begin
          din(256*2+255 downto 256*2)  => freqRxBandVec(2),
          din(256*3+255 downto 256*3)  => freqRxBandVec(3),
          din(4*256+0)                 => startRxMarker,
-         din(4*256+1)                 => debugRXMarker,
          dout(256*0+255 downto 256*0) => freqTxBandVec(0),
          dout(256*1+255 downto 256*1) => freqTxBandVec(1),
          dout(256*2+255 downto 256*2) => freqTxBandVec(2),
          dout(256*3+255 downto 256*3) => freqTxBandVec(3),
-         dout(4*256+0)                => startTxMarker,
-         dout(4*256+1)                => debugTXMarker);
-
-   U_Test : entity surf.SlvDelay
-      generic map (
-         TPD_G        => TPD_G,
-         SRL_EN_G     => false,
-         REG_OUTPUT_G => false,
-         DELAY_G      => 63,
-         WIDTH_G      => 1)
-      port map (
-         clk     => dspClk,
-         rst     => rstDspCore,
-         delay   => debugRxAddr(10 downto 5),
-         din(0)  => startRxMarker,
-         dout(0) => debugRxTest);
+         dout(4*256+0)                => startTxMarker);
 
    U_RingBuffer : entity work.DspCoreRingBuffer
       generic map (
@@ -289,12 +263,13 @@ begin
          -- Debug Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         debugRXMarker   => debugRxMarker,
-         debugRxAddr     => debugRxAddr(4 downto 0),
-         debugRxBandVec  => freqRxBandVec,
-         debugTXMarker   => debugTxMarker,
-         debugTxAddr     => debugTxAddr(4 downto 0),
-         debugTxBandVec  => freqTxBandVec,
+         rstDspCore      => rstDspCore,
+         startRxMarker   => startRxMarker,
+         debugRxAddr     => debugRxAddr,
+         freqRxBandVec   => freqRxBandVec,
+         startTxMarker   => startTxMarker,
+         debugTxAddr     => debugTxAddr,
+         freqTxBandVec   => freqTxBandVec,
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
