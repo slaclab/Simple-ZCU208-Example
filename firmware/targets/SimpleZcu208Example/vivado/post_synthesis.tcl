@@ -18,7 +18,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 # Bypass the debug chipscope generation via return cmd
 # ELSE ... comment out the return to include chipscope
 ######################################################
-# return
+return
 
 ############################
 ## Open the synthesis design
