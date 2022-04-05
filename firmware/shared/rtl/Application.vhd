@@ -95,7 +95,7 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   U_AdcSigGen : entity axi_soc_ultra_plus_core.DacSigGen
+   U_AdcSigGen : entity axi_soc_ultra_plus_core.SigGen
       generic map (
          TPD_G              => TPD_G,
          NUM_CH_G           => 8,
@@ -139,7 +139,7 @@ begin
          axilWriteMaster => axilWriteMasters(DSP_CORE_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DSP_CORE_INDEX_C));
 
-   U_DacSigGen : entity axi_soc_ultra_plus_core.DacSigGen
+   U_DacSigGen : entity axi_soc_ultra_plus_core.SigGen
       generic map (
          TPD_G              => TPD_G,
          NUM_CH_G           => 8,
