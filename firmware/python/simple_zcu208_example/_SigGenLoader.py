@@ -27,7 +27,7 @@ def common_integer(*numbers):
     divisor   = reduce(gcd, ints)
     return [int(n / divisor) for n in ints]
 
-class DacSigGenLoader(pr.Device):
+class SigGenLoader(pr.Device):
     def __init__(self,DacSigGen=None,**kwargs):
         super().__init__(**kwargs)
 

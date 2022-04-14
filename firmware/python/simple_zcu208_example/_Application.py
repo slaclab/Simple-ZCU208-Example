@@ -24,7 +24,7 @@ class Application(pr.Device):
             # expand   = True,
         ))
 
-        self.add(rfsoc_utility.DacSigGen(
+        self.add(rfsoc_utility.SigGen(
             name         = 'AdcSigGen',
             offset       = 0x03_000000,
             numCh        = 8,  # Must match NUM_CH_G config
@@ -33,7 +33,8 @@ class Application(pr.Device):
             # expand       = True,
         ))
 
-        self.add(rfsoc_utility.DacSigGen(
+        self.add(rfsoc_utility.SigGen(
+            name         = 'DacSigGen',
             offset       = 0x01_000000,
             numCh        = 8,  # Must match NUM_CH_G config
             ramWidth     = 10, # Must match RAM_ADDR_WIDTH_G config
@@ -46,13 +47,14 @@ class Application(pr.Device):
             expand       = True,
         ))
 
-        self.add(rfsoc.DacSigGenLoader(
+        self.add(rfsoc.SigGenLoader(
             name      = 'AdcSigGenLoader',
             DacSigGen = self.AdcSigGen,
             expand    = True,
         ))
 
-        self.add(rfsoc.DacSigGenLoader(
+        self.add(rfsoc.SigGenLoader(
+            name      = 'DacSigGenLoader',
             DacSigGen = self.DacSigGen,
             expand    = True,
         ))
