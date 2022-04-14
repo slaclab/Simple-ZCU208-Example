@@ -34,7 +34,7 @@ Root:
         Analysis:
           enable: False
           Config[1]: 0
-          Config[2]: 4
+          Config[2]: 0x8
           Config[3]: 0x41
           Config[4]: 0
           Config[5]: 0

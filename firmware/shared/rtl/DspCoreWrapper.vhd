@@ -62,7 +62,7 @@ architecture mapping of DspCoreWrapper is
          reset                  : in  std_logic_vector(0 downto 0);
          valid_in               : in  std_logic_vector(0 downto 0);
          evenimag_in            : in  std_logic_vector(255 downto 0);
-         evenrea_in             : in  std_logic_vector(255 downto 0);
+         evenreal_in            : in  std_logic_vector(255 downto 0);
          oddimag_in             : in  std_logic_vector(255 downto 0);
          oddreal_in             : in  std_logic_vector(255 downto 0);
          stream_en_in           : in  std_logic_vector(0 downto 0);
@@ -197,14 +197,14 @@ begin
          dacreal                => dspDac(0),
          dacimag                => dspDac(1),
          -- Freq Band Outbound (RX) Interface
-         stream_en_out(0)       => startRxMarker,     -- CH=0 when HIGH
+         stream_en_out(0)       => startRxMarker,  -- CH=0 when HIGH
          evenreal_out           => freqRxBandVec(0),
          evenimag_out           => freqRxBandVec(1),
          oddreal_out            => freqRxBandVec(2),
          oddimag_out            => freqRxBandVec(3),
          -- Freq Band Inbound (TX) Interface
-         stream_en_in(0)        => startTxMarker,     -- CH=0 when HIGH
-         evenrea_in             => freqTxBandVec(0),  -- Lili misspelled this port. Should be "evenrea_in"
+         stream_en_in(0)        => startTxMarker,  -- CH=0 when HIGH
+         evenreal_in            => freqTxBandVec(0),
          evenimag_in            => freqTxBandVec(1),
          oddreal_in             => freqTxBandVec(2),
          oddimag_in             => freqTxBandVec(3),
