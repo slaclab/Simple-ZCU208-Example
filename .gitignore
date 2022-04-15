@@ -15,6 +15,8 @@
 *.bin
 *.ld
 *.dat
+*.autosave
+*.slxc
 
 # OS files
 .DS_Store
