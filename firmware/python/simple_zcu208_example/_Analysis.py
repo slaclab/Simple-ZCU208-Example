@@ -95,7 +95,7 @@ class Analysis(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'Config[7]',
             offset       = 0x01C,
-            bitSize      = 6,
+            bitSize      = 7,
             mode         = 'RW',
             description  = """
                 transmitter FFT blocks output streaming.

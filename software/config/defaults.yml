@@ -34,12 +34,12 @@ Root:
         Analysis:
           enable: False
           Config[1]: 0
-          Config[2]: 0x8
-          Config[3]: 0x41
+          Config[2]: 0x4
+          Config[3]: 0x44
           Config[4]: 0
           Config[5]: 0
           Config[6]: 0xFFFFFFFF
-          Config[7]: 0
+          Config[7]: 86
           Config[8]: 10
         AppRingBuffer:
           Adc:
