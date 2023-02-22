@@ -132,6 +132,7 @@ sudo umount /u1/boot
 
 
 ```bash
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "10.0.0.200" # https://jira.slac.stanford.edu/browse/ESRFOC-54
 scp SimpleZcu208Example-0x01000000-20220204204648-ruckman-90df89c.bit root@10.0.0.200:/media/sd-mmcblk0p1/system.bit
 ```
 
