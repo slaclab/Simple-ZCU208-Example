@@ -35,4 +35,4 @@ Releases:
     Targets:
       - SimpleZcu208Example
     Types:
-      - Rogue
+      - petalinux
