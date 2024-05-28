@@ -25,6 +25,10 @@ return
 ############################
 open_run synth_1
 
+##############################################################################
+##############################################################################
+##############################################################################
+
 ###############################
 ## Set the name of the ILA core
 ###############################
@@ -43,16 +47,26 @@ set_property C_DATA_DEPTH 1024 [get_debug_cores ${ilaName}]
 #################################
 ## Set the clock for the ILA core
 #################################
-SetDebugCoreClk ${ilaName} {U_App/U_DspCoreWrapper/dspClk}
+SetDebugCoreClk ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilClk}
 
 #######################
 ## Set the debug Probes
 #######################
 
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/startRxMarker}
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/startTxMarker}
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/debugRXMarker}
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/debugTXMarker}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilR[dataState][*]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilR[trigState][*]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/armed}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilR[bufferClear]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilR[continuous]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilR[softTrig]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axilR[txMaster][tValid]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/axisSlave[tReady]}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/dataRstSync}
+ConfigProbe ${ilaName} {U_App/U_AppRingBuffer/GEN_ADC_BUFF.U_AdcRingBuffer/GEN_VEC[0].U_AxiStreamRingBuffer/readReq}
+
+##############################################################################
+##############################################################################
+##############################################################################
 
 ##########################
 ## Write the port map file
