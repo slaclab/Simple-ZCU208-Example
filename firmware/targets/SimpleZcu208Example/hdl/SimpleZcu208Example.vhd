@@ -105,6 +105,7 @@ begin
       port map (
          ------------------------
          --  Top Level Interfaces
+         ------------------------
          -- DSP Clock and Reset Monitoring
          dspClk          => dspClk,
          dspRst          => dspRst,
