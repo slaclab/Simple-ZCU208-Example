@@ -18,7 +18,7 @@ Note: `recursive flag` used to initialize all submodules within the clone
 
 # How to generate the RFSoC .BIT and .XSA files
 
-1) Setup Xilinx PATH and licensing (if on SLAC AFS network) else requires Vivado install and licensing on your local machine
+1) Setup Xilinx PATH and licensing (if on SLAC S3DF network) else requires Vivado install and licensing on your local machine
 
 ```bash
 $ source Simple-ZCU208-Example/firmware/vivado_setup.sh
@@ -54,7 +54,7 @@ drwxr-xr-x 2 ruckman re 2.0K Feb  4 21:15 .
 
 1) Generate the .bit and .xsa files (refer to `How to generate the RFSoC .BIT and .XSA files` instructions).
 
-2) Setup Xilinx PATH and licensing (if on SLAC AFS network) else requires Vivado install and licensing on your local machine
+2) Setup Xilinx PATH and licensing (if on SLAC S3DF network) else requires Vivado install and licensing on your local machine
 
 ```bash
 # These setup scripts assume that you are on SLAC network
