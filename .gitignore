@@ -52,3 +52,4 @@ linux*
 *.bif
 *.elf
 *.dcp
+.venv-docs/
