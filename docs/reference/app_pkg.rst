@@ -20,7 +20,7 @@ generics to PyRogue parameters. The values below are sourced verbatim from
    * - ``DMA_SIZE_C``
      - ``2``
      - Number of DMA lanes. Lane 0 carries ADC/DAC ring buffer data;
-       lane 1 is hard-wired loopback for debug.
+       lane 1 is a hard-wired loopback for debug.
    * - ``AXIL_CLK_FREQ_C``
      - ``100.0E+6`` (Hz)
      - AXI-Lite clock frequency, register-access domain.
