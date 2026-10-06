@@ -27,7 +27,7 @@ is split across two DMA lanes:
   RFDC -> physical DAC pins. Loopback samples are also captured back
   into ``AppRingBuffer`` for closed-loop debug.
 * **Ring-buffer DMA model with** ``DMA_SIZE_C = 2``: lane 0 carries
-  the ADC and DAC ring-buffer data; lane 1 is hard-wired loopback for
+  the ADC and DAC ring-buffer data; lane 1 is a hard-wired loopback for
   debug. See :doc:`../reference/app_pkg` for the constants and
   :doc:`../reference/rtl_top_entity` for the entity surface.
 
@@ -50,14 +50,14 @@ Three asynchronous clock domains drive this application:
    * - ``dspClk``
      - 312.5 MHz
      - DSP and DAC sample bus (``Slv256Array``, 16 samples per cycle,
-       8 channels ADC and 8 channels DAC).
+       8 ADC channels and 8 DAC channels).
    * - ``adcClock``
      - 416.667 MHz
      - RFDC ADC output.
 
 All three are declared as asynchronous clock groups in the XDC, so
 Vivado's timing engine does not attempt to close timing across them.
-CDC crossings between any two domains use surf primitives
+Crossings between any two domains use surf primitives
 (``Synchronizer`` for control/status, ``Ssr12ToSsr16Gearbox`` for the
 ADC sample bus). For the platform-level CDC philosophy and the hub's
 treatment of clock-group declarations, see
@@ -106,7 +106,7 @@ Startup discipline
 ------------------
 
 The application's PyRogue ``Application`` device is instantiated with
-``enabled=False`` and is only enabled after the ``dspClk`` is stable.
+``enabled=False`` and is only enabled after ``dspClk`` is stable.
 The ``Root.start()`` method enforces the order: user-logic reset, LMK
 clock chip initialization, DSP-reset wait, application enable, RFDC
 initialization, MTS sync, YAML config load, and finally the SigGen

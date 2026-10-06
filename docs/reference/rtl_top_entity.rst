@@ -12,7 +12,7 @@ The entity is the top FPGA target loaded by the Processing System at boot. It
 maps physical board I/O to internal AXI buses and three clock domains:
 
 * **LMK ports:** ``lmkSync``, ``clkMuxSel``, ``i2c1Scl``, ``i2c1Sda`` (I2C
-  to on-board LMK clock chip).
+  to the on-board LMK clock chip).
 * **RF data converter ports:** ADC differential clock and data
   (``adcClkP/N``, ``adcP/N[7:0]``); DAC differential clock and data
   (``dacClkP/N``, ``dacP/N[7:0]``); SYSREF and PL clock differential pairs.
@@ -69,7 +69,7 @@ Clock domains
      - 416.667 MHz
      - RFDC ADC output.
 
-All cross-domain crossings use surf ``Synchronizer`` or ``Ssr12ToSsr16Gearbox``
+All clock-domain crossings use surf ``Synchronizer`` or ``Ssr12ToSsr16Gearbox``
 primitives; the three domains are declared as asynchronous groups in the XDC.
 For the platform-level CDC philosophy, see
 :hub:`explanation/architecture.html#clock-domains`.
